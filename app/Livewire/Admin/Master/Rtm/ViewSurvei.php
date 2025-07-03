@@ -25,12 +25,17 @@ class ViewSurvei extends Component
     public $formIsOpen = false;
     public $currentIndicatorId = null;
     public $currentIndicatorDesc = null;
+    public $user = null;
 
     public function mount($rtm_id, $survei_id)
     {
         $this->rtm = RTM::findOrFail($rtm_id);
         $this->surveiId = $survei_id;
         $this->fakultas = Fakultas::all();
+        $this->user = Auth::user();
+        if ($this->user->role->name == 'Fakultas') {
+            $this->selectedFakultas = $this->user->fakultas_id;
+        }
 
         // Get Survei data
         $this->loadSurveiData();
@@ -89,7 +94,7 @@ class ViewSurvei extends Component
     protected function loadRencanaTindakLanjut($indicatorId)
     {
         // Find existing rencana tindak lanjut for this indicator
-        $rencana = RtmRencanaTindakLanjut::where('indicator_id', $indicatorId)
+        $rencana = RtmRencanaTindakLanjut::where('survei_id', $indicatorId)
             ->where('rtm_id', $this->rtm->id)
             ->where(function ($query) {
                 if ($this->selectedFakultas) {
@@ -134,7 +139,7 @@ class ViewSurvei extends Component
         // Check if we already have a record
         $rencana = RtmRencanaTindakLanjut::updateOrCreate(
             [
-                'indicator_id' => $this->currentIndicatorId,
+                'survei_id' => $this->currentIndicatorId,
                 'rtm_id' => $this->rtm->id,
                 'fakultas_id' => $this->selectedFakultas,
             ],
@@ -148,6 +153,27 @@ class ViewSurvei extends Component
         session()->flash('toastType', 'success');
 
         $this->closeRencanaForm();
+    }
+
+    public function deleteRencanaTindakLanjut($indicatorId)
+    {
+        $query = RtmRencanaTindakLanjut::where('survei_id', $indicatorId)
+            ->where('rtm_id', $this->rtm->id);
+        if ($this->selectedFakultas) {
+            $query->where('fakultas_id', $this->selectedFakultas);
+        } else {
+            $query->whereNull('fakultas_id');
+        }
+        $query->delete();
+        
+        // Reset the form data for this indicator
+        $this->rencanaForms[$indicatorId] = [
+            'rencana_tindak_lanjut' => '',
+            'target_penyelesaian' => '',
+        ];
+        
+        session()->flash('toastMessage', 'Rencana tindak lanjut berhasil dihapus!');
+        session()->flash('toastType', 'success');
     }
 
     public function updatedSelectedFakultas()

@@ -28,7 +28,7 @@ class UserFakultas implements FromCollection, WithHeadings, WithStyles
             return [
                 'email' => $user->email,
                 'fakultas' => $user->fakultas->name ?? 'N/A', // Ensure 'fakultas' relationship exists
-                'password' => $user->name,
+                'password' => '12345678',
             ];
         });
     }

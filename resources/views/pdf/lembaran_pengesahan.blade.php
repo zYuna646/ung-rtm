@@ -106,9 +106,8 @@
     <div class="container" style="display: flex; justify-content: space-between; height: 100%;">
         <div class="title-wrapper" style="margin-bottom: 120px">
             <div class="title" style="font-size: 14">Lembar Pengesahan Laporan</div>
-            <div class="title" style="font-size: 14">RAPAT TINJAUAN MANAJEMEN</div>
-            <div class="title" style="font-size: 14">TAHUN AKADEMIK 2022/2023</div>
-            <div class="title" style="font-size: 14; margin-bottom: 120px">TAHUN 2022/2023</div>
+            <div class="title" style="font-size: 14">{{$rtm->name}}</div>
+            <div class="title" style="font-size: 14">TAHUN AKADEMIK {{ $reportData['tahun_akademik'] ?? '2022/2023' }}</div>
             <div class="title" style="font-size: 12; font-weight: normal">Mengetahui,</div>
         </div>
         <table style="width: 100%;">
@@ -136,13 +135,13 @@
                 UNIT PENJAMINAN MUTU
             </div>
             <div class="subtitle" style="font-size: 14">
-                FAKULTAS TEKNIK
+                {{$fakultas != 'Universitas' ? $fakultas : 'UNIVERSITAS NEGERI GORONTALO'}}
             </div>
             <div class="subtitle" style="font-size: 14">
-                UNIVERSITAS NEGERI GORONTALO
+                {{$fakultas != 'Universitas' ? 'UNIVERSITAS NEGERI GORONTALO' : ''}}
             </div>
             <div class="subtitle" style="font-size: 14">
-                2023
+                {{$rtm->tahun}}
             </div>
         </div>
     </div>

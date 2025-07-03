@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->text('rencana_tindak_lanjut');
             $table->string('target_penyelesaian');
-            $table->unsignedBigInteger('indicator_id')->comment('ID of indicator from AMI');
+            $table->unsignedBigInteger('ami_id')->nullable()->comment('ID of indicator from AMI');
+            $table->unsignedBigInteger('survei_id')->nullable()->comment('ID of indicator from Survei');
+            $table->unsignedBigInteger('akreditasi_id')->nullable()->comment('ID of indicator from Akreditasi');
             $table->unsignedBigInteger('rtm_id');
             $table->unsignedBigInteger('fakultas_id')->nullable()->comment('Null for university level');
             $table->timestamps();
@@ -25,8 +27,10 @@ return new class extends Migration
             // Add foreign key for fakultas_id if needed
             // $table->foreign('fakultas_id')->references('id')->on('fakultas')->onDelete('cascade');
             
-            // We need a unique constraint to avoid duplicates
-            $table->unique(['indicator_id', 'rtm_id', 'fakultas_id'], 'unique_rtm_indicator_fakultas');
+            // We need unique constraints to avoid duplicates for each type
+            $table->unique(['ami_id', 'rtm_id', 'fakultas_id'], 'unique_rtm_ami_fakultas');
+            $table->unique(['survei_id', 'rtm_id', 'fakultas_id'], 'unique_rtm_survei_fakultas');
+            $table->unique(['akreditasi_id', 'rtm_id', 'fakultas_id'], 'unique_rtm_akreditasi_fakultas');
         });
     }
 

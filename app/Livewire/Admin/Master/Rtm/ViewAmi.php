@@ -19,6 +19,9 @@ class ViewAmi extends Component
     public $fakultas = [];
     public $amiData = [];
     public $anchorName = '';
+    public $categoryAverages = [];
+    public $overallAverage = 0;
+    public $isLoading = false;
 
     // New properties for rencana tindak lanjut form
     public $rencanaForms = [];
@@ -26,11 +29,29 @@ class ViewAmi extends Component
     public $currentIndicatorId = null;
     public $currentIndicatorDesc = null;
 
+    // New properties for program modal
+    public $programModalOpen = false;
+    public $programType = null; // 'sesuai' or 'tidak_sesuai'
+    public $programIds = [];
+    public $programItems = [];
+    public $indicatorCode = null;
+    public $indicatorDesc = null;
+    
+    public $program = [];
+    public $user = null;
+
     public function mount($rtm_id, $anchor_id)
     {
         $this->rtm = RTM::findOrFail($rtm_id);
         $this->anchorId = $anchor_id;
         $this->fakultas = Fakultas::all();
+        $this->user = Auth::user();
+        $amiService = app(AmiService::class);
+        $program = $amiService->getProgram();
+        $this->program = $program['data'];
+        if ($this->user->role->name == 'Fakultas') {
+            $this->selectedFakultas = $this->user->fakultas_id;
+        }
 
         // Get AMI data
         $this->loadAmiData();
@@ -47,6 +68,8 @@ class ViewAmi extends Component
 
     public function loadAmiData()
     {
+        $this->isLoading = true;
+        
         $amiService = app(AmiService::class);
         
         // Get the AMI ID from the fakultas, if one is selected
@@ -63,11 +86,51 @@ class ViewAmi extends Component
         }
         
         $result = $amiService->getAmi($this->anchorId, $fakultasAmiId);
-
+        // Get program data
+        
         if (isset($result['data']) && !empty($result['data'])) {
             $this->amiData = $result['data'];
+            $this->calculateAverages();
         } else {
             $this->amiData = [];
+            $this->categoryAverages = [];
+            $this->overallAverage = 0;
+        }
+        
+        $this->isLoading = false;
+    }
+    
+    /**
+     * Calculate average performance scores per category and overall
+     */
+    protected function calculateAverages()
+    {
+        $this->categoryAverages = [];
+        $allScores = [];
+        
+        foreach ($this->amiData as $category => $items) {
+            $categoryScores = [];
+            
+            foreach ($items as $indicator) {
+                if (isset($indicator['score']) && is_numeric($indicator['score'])) {
+                    $categoryScores[] = $indicator['score'];
+                    $allScores[] = $indicator['score'];
+                }
+            }
+            
+            // Calculate category average
+            if (count($categoryScores) > 0) {
+                $this->categoryAverages[$category] = round(array_sum($categoryScores) / count($categoryScores), 2);
+            } else {
+                $this->categoryAverages[$category] = 0;
+            }
+        }
+        
+        // Calculate overall average
+        if (count($allScores) > 0) {
+            $this->overallAverage = round(array_sum($allScores) / count($allScores), 2);
+        } else {
+            $this->overallAverage = 0;
         }
     }
 
@@ -87,7 +150,7 @@ class ViewAmi extends Component
     protected function loadRencanaTindakLanjut($indicatorId)
     {
         // Find existing rencana tindak lanjut for this indicator
-        $rencana = RtmRencanaTindakLanjut::where('indicator_id', $indicatorId)
+        $rencana = RtmRencanaTindakLanjut::where('ami_id', $indicatorId)
             ->where('rtm_id', $this->rtm->id)
             ->where(function ($query) {
                 if ($this->selectedFakultas) {
@@ -132,7 +195,7 @@ class ViewAmi extends Component
         // Check if we already have a record
         $rencana = RtmRencanaTindakLanjut::updateOrCreate(
             [
-                'indicator_id' => $this->currentIndicatorId,
+                'ami_id' => $this->currentIndicatorId,
                 'rtm_id' => $this->rtm->id,
                 'fakultas_id' => $this->selectedFakultas,
             ],
@@ -148,6 +211,40 @@ class ViewAmi extends Component
         $this->closeRencanaForm();
     }
 
+    // New methods for program modal
+    public function openProgramModal($type, $ids, $code = null, $desc = null)
+    {
+        $this->programType = $type;
+        $this->programIds = json_decode($ids);
+        $this->indicatorCode = $code;
+        $this->indicatorDesc = $desc;
+        $this->programItems = [];
+        
+        // Get program items based on IDs
+        if (!empty($this->programIds) && !empty($this->program)) {
+            foreach ($this->programIds as $id) {
+                foreach ($this->program as $programItem) {
+                    if ($programItem['id'] == $id) {
+                        $this->programItems[] = $programItem;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        $this->programModalOpen = true;
+    }
+    
+    public function closeProgramModal()
+    {
+        $this->programModalOpen = false;
+        $this->programType = null;
+        $this->programIds = [];
+        $this->programItems = [];
+        $this->indicatorCode = null;
+        $this->indicatorDesc = null;
+    }
+
     public function updatedSelectedFakultas()
     {
         $this->loadAmiData();
@@ -159,6 +256,25 @@ class ViewAmi extends Component
         $this->selectedFakultas = null;
         $this->loadAmiData();
         $this->initializeRencanaForms();
+    }
+
+    public function deleteRencanaTindakLanjut($indicatorId)
+    {
+        $query = RtmRencanaTindakLanjut::where('ami_id', $indicatorId)
+            ->where('rtm_id', $this->rtm->id);
+        if ($this->selectedFakultas) {
+            $query->where('fakultas_id', $this->selectedFakultas);
+        } else {
+            $query->whereNull('fakultas_id');
+        }
+        $query->delete();
+        // Reset the form data for this indicator
+        $this->rencanaForms[$indicatorId] = [
+            'rencana_tindak_lanjut' => '',
+            'target_penyelesaian' => '',
+        ];
+        session()->flash('toastMessage', 'Rencana tindak lanjut berhasil dihapus!');
+        session()->flash('toastType', 'success');
     }
 
     public function render()

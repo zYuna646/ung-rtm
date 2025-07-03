@@ -50,37 +50,38 @@
                     </button>
                 </div>
                 
-                <!-- Kartu Filter -->
-                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                    <div class="flex items-center border-b border-gray-200 pb-4 mb-4">
-                        <div class="bg-indigo-100 p-2 rounded-full mr-3">
-                            <i class="fas fa-filter text-indigo-600 text-xl"></i>
+                @if ($user->role->name == 'Universitas')
+                    <!-- Kartu Filter -->
+                    <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                        <div class="flex items-center border-b border-gray-200 pb-4 mb-4">
+                            <div class="bg-indigo-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-filter text-indigo-600 text-xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-gray-800">Filter Data</h2>
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-800">Filter Data</h2>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label for="fakultas" class="block text-sm font-medium text-gray-700 mb-2">Fakultas</label>
-                        <div class="relative">
-                          
-                            <select id="fakultas" name="fakultas" wire:model="selectedFakultas" wire:change="loadLampiran"
-                                class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
-                                <option value="">Semua Fakultas</option>
-                                @foreach ($fakultas as $f)
-                                    <option value="{{ $f->id }}">{{ $f->name }}</option>
-                                @endforeach
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                <i class="fas fa-chevron-down text-gray-500"></i>
+                        
+                        <div class="mb-6">
+                            <label for="fakultas" class="block text-sm font-medium text-gray-700 mb-2">Fakultas</label>
+                            <div class="relative">
+                            
+                                <select id="fakultas" name="fakultas" wire:model="selectedFakultas" wire:change="loadLampiran"
+                                    class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
+                                    <option value="">Semua Fakultas</option>
+                                    @foreach ($fakultas as $f)
+                                        <option value="{{ $f->id }}">{{ $f->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-500"></i>
+                                </div>
                             </div>
                         </div>
+                        
+                        <button wire:click="resetFilter" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
+                            <i class="fas fa-redo-alt mr-2"></i> Reset Filter
+                        </button>
                     </div>
-                    
-                    <button wire:click="resetFilter" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
-                        <i class="fas fa-redo-alt mr-2"></i> Reset Filter
-                    </button>
-                </div>
-                
+                @endif
                 <!-- Kartu Informasi RTM -->
                 <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
                     <div class="flex items-center border-b border-gray-200 pb-4 mb-6">
@@ -288,24 +289,113 @@
                         </button>
                     </div>
                     <div x-show="expanded" x-transition class="overflow-hidden rounded-xl border border-gray-200">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-700">No.</th>
-                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-700">Nama</th>
-                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-700">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach ($akreditasi as $index => $item)
-                                    <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ $index + 1 }}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ $item->nama }}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ $item->status }}</td>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">No</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Fakultas</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Jenjang</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Prodi</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Terakreditasi</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">No. Sertifikat</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Tanggal Akreditasi</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Tanggal Kadaluarsa</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Batas Berlaku</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-700">Peringatan</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-700">Aksi</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach ($paginatedAkreditasi as $index => $akreditasi)
+                                        <tr class="hover:bg-gray-50 text-xs">
+                                            <td class="px-2 py-2 text-gray-600">{{ $loop->iteration }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['prodi']['fakultas']['fakultas_alias'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['jenjang']['jenjang_alias'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['prodi']['prodi_nama'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['status']['status_nama'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['akre_sk'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['akre_tglmulai'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['akre_tglakhir'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">{{ $akreditasi['batas_berlaku'] }}</td>
+                                            <td class="px-2 py-2 text-gray-600">
+                                                <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                                                    @if($akreditasi['peringatan_level'] == 'warning') bg-yellow-100 text-yellow-700
+                                                    @elseif($akreditasi['peringatan_level'] == 'danger') bg-red-100 text-red-700
+                                                    @else bg-blue-100 text-blue-700 @endif">
+                                                    {{ $akreditasi['peringatan'] }}
+                                                </span>
+                                            </td>
+                                            <td class="px-2 py-2 text-center">
+                                                @if(isset($akreditasiRencanaForms[$akreditasi['akre_id']]) && 
+                                                    (!empty($akreditasiRencanaForms[$akreditasi['akre_id']]['rencana_tindak_lanjut']) || 
+                                                     !empty($akreditasiRencanaForms[$akreditasi['akre_id']]['target_penyelesaian'])))
+                                                    <div class="flex justify-center space-x-1">
+                                                        <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, '{{ $akreditasi['prodi']['prodi_nama'] }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
+                                                            <i class="fas fa-edit mr-1"></i>
+                                                        </button>
+                                                        <button 
+                                                            onclick="if(confirm('Hapus rencana tindak lanjut ini?')) { @this.call('deleteAkreditasiRencanaTindakLanjut', {{ $akreditasi['akre_id'] }}); }"
+                                                            class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded">
+                                                            <i class="fas fa-trash mr-1"></i>
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, '{{ $akreditasi['prodi']['prodi_nama'] }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
+                                                        <i class="fas fa-clipboard-list mr-1"></i> RTL
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    
+                                    @if($akreditasiExpiringSoon->count() == 0)
+                                        <tr>
+                                            <td colspan="11" class="px-2 py-3 text-center text-gray-500">
+                                                Tidak ada data akreditasi yang tersedia
+                                            </td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                            <div class="px-6 py-4 bg-white border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-700">
+                                            Menampilkan
+                                            <span class="font-medium">{{ $paginatedAkreditasi->firstItem() ?? 0 }}</span>
+                                            sampai
+                                            <span class="font-medium">{{ $paginatedAkreditasi->lastItem() ?? 0 }}</span>
+                                            dari
+                                            <span class="font-medium">{{ $paginatedAkreditasi->total() }}</span>
+                                            data
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                            <button wire:click="previousPage" @if($paginatedAkreditasi->onFirstPage()) disabled @endif
+                                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 @if($paginatedAkreditasi->onFirstPage()) opacity-50 cursor-not-allowed @endif">
+                                                <span class="sr-only">Previous</span>
+                                                <i class="fas fa-chevron-left"></i>
+                                            </button>
+                                            
+                                            @for ($i = 1; $i <= $paginatedAkreditasi->lastPage(); $i++)
+                                                <button wire:click="gotoPage({{ $i }})" 
+                                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {{ $i == $paginatedAkreditasi->currentPage() ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50' }}">
+                                                    {{ $i }}
+                                                </button>
+                                            @endfor
+                                            
+                                            <button wire:click="nextPage" @if(!$paginatedAkreditasi->hasMorePages()) disabled @endif
+                                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 @if(!$paginatedAkreditasi->hasMorePages()) opacity-50 cursor-not-allowed @endif">
+                                                <span class="sr-only">Next</span>
+                                                <i class="fas fa-chevron-right"></i>
+                                            </button>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -348,7 +438,8 @@
                                 </div>
                             </div>
                         </div>
-                        
+                        @if ($user->role->name == 'Universitas')
+
                         <!-- Fakultas filter for RTM report -->
                         <div class="col-span-12 mb-4">
                             <label for="report_fakultas" class="block text-sm font-medium text-gray-700 mb-1">Fakultas:</label>
@@ -366,6 +457,7 @@
                             </div>
                             <p class="text-sm text-gray-500 mt-1">Pilih fakultas jika laporan ini spesifik untuk fakultas tertentu.</p>
                         </div>
+                        @endif
                         
                         <!-- Name fields in one row -->
                         <div class="flex flex-col col-span-12">
@@ -512,33 +604,113 @@
                         <div class="flex flex-col col-span-12">
                             <label for="agenda" class="text-sm font-medium text-gray-700 mb-1">Agenda:</label>
                             <textarea id="agenda" name="agenda" wire:model="rtmReport.agenda"
-                                placeholder="Masukkan agenda rapat"
+                                placeholder="Masukkan tema agenda rapat"
                                 class="p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[120px]"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Masukkan tema rapat (misalnya: Hasil AMI 2024)</p>
                             @error('rtmReport.agenda')
                                 <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                             @enderror
                         </div>
                         
                         <div class="flex flex-col col-span-12">
+                            <label for="agenda_kegiatan" class="text-sm font-medium text-gray-700 mb-1">Agenda Kegiatan:</label>
+                            <textarea id="agenda_kegiatan" name="agenda_kegiatan" wire:model.defer="rtmReport.agenda_kegiatan"
+                                placeholder="Masukkan agenda kegiatan rapat. Gunakan format daftar atau paragraf sesuai kebutuhan."
+                                class="rich-editor p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[150px]"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Gunakan toolbar untuk memformat teks, membuat daftar berurut atau tidak berurut, dll.</p>
+                            @error('rtmReport.agenda_kegiatan')
+                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        
+                        <div class="flex flex-col col-span-12">
                             <label for="peserta" class="text-sm font-medium text-gray-700 mb-1">Peserta:</label>
-                            <textarea id="peserta" name="peserta" wire:model="rtmReport.peserta"
-                                placeholder="Masukkan daftar peserta rapat"
-                                class="p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[120px]"></textarea>
+                            <textarea id="peserta" name="peserta" wire:model.defer="rtmReport.peserta"
+                                placeholder="Masukkan daftar peserta rapat. Gunakan format daftar atau paragraf sesuai kebutuhan."
+                                class="rich-editor p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[150px]"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Gunakan toolbar untuk memformat teks, membuat daftar berurut atau tidak berurut, dll.</p>
                             @error('rtmReport.peserta')
                                 <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                             @enderror
                         </div>
 
-                        <div class="col-span-12 flex justify-end mt-3">
-                            <x-button class="bg-gray-200 hover:bg-gray-300 text-gray-700 mr-2" type="button" @click="rtmReport = false">
-                                Batal
-                            </x-button>
-                            <x-button class="bg-red-600 hover:bg-red-700 text-white shadow-md" type="submit">
-                                <span wire:loading.remove wire:target="generateReport"><i class="fas fa-file-download mr-1"></i> Generate Laporan</span>
-                                <span wire:loading wire:target="generateReport" class="flex items-center">
-                                    <i class="fas fa-circle-notch animate-spin mr-1"></i> Memproses...
-                                </span>
-                            </x-button>
+                        <div class="col-span-12">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Konten Tambahan untuk Laporan</h3>
+                            <p class="text-sm text-gray-600 mb-3">Konten berikut akan digunakan dalam Bab 1 laporan RTM. Jika dibiarkan kosong, akan menggunakan konten default.</p>
+                        </div>
+                        
+                        <div class="flex flex-col col-span-12">
+                            <label for="tujuan" class="text-sm font-medium text-gray-700 mb-1">Tujuan:</label>
+                            <textarea id="tujuan" name="tujuan" wire:model.defer="rtmReport.tujuan"
+                                placeholder="Masukkan tujuan RTM. Format sesuai kebutuhan."
+                                class="rich-editor p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[150px]"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Gunakan toolbar untuk memformat teks, membuat daftar berurut atau tidak berurut, dll.</p>
+                            @error('rtmReport.tujuan')
+                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        
+                        <div class="flex flex-col col-span-12">
+                            <label for="hasil" class="text-sm font-medium text-gray-700 mb-1">Hasil:</label>
+                            <textarea id="hasil" name="hasil" wire:model.defer="rtmReport.hasil"
+                                placeholder="Masukkan hasil RTM. Format sesuai kebutuhan."
+                                class="rich-editor p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[150px]"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Gunakan toolbar untuk memformat teks, membuat daftar berurut atau tidak berurut, dll.</p>
+                            @error('rtmReport.hasil')
+                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        
+                        <div class="flex flex-col col-span-12">
+                            <label for="kesimpulan" class="text-sm font-medium text-gray-700 mb-1">Kesimpulan:</label>
+                            <textarea id="kesimpulan" name="kesimpulan" wire:model.defer="rtmReport.kesimpulan"
+                                placeholder="Masukkan kesimpulan RTM. Format sesuai kebutuhan."
+                                class="rich-editor p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[150px]"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Gunakan toolbar untuk memformat teks, membuat daftar berurut atau tidak berurut, dll.</p>
+                            @error('rtmReport.kesimpulan')
+                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        
+                        <div class="flex flex-col col-span-12">
+                            <label for="penutup" class="text-sm font-medium text-gray-700 mb-1">Penutup:</label>
+                            <textarea id="penutup" name="penutup" wire:model.defer="rtmReport.penutup"
+                                placeholder="Masukkan penutup RTM. Format sesuai kebutuhan."
+                                class="rich-editor p-3.5 text-sm rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 border border-gray-200 min-h-[150px]"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Gunakan toolbar untuk memformat teks, membuat daftar berurut atau tidak berurut, dll.</p>
+                            @error('rtmReport.penutup')
+                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-span-12 flex flex-col">
+                            <!-- Generation Progress Info (visible when generating report) -->
+                            <div wire:loading wire:target="generateReport" class="flex items-center mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                                <i class="fas fa-spinner fa-spin text-indigo-600 mr-3 text-xl"></i>
+                                <div>
+                                    <p class="font-medium text-indigo-700">Sedang Membuat Laporan RTM</p>
+                                    <p class="text-sm text-indigo-600">Mohon tunggu, proses ini membutuhkan waktu beberapa saat...</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Buttons -->
+                            <div class="flex justify-end mt-3">
+                                <x-button class="bg-gray-200 hover:bg-gray-300 text-gray-700 mr-2" type="button" @click="rtmReport = false">
+                                    Batal
+                                </x-button>
+                                <x-button class="bg-blue-600 hover:bg-blue-700 text-white shadow-md mr-2" type="button" wire:click="saveReport">
+                                    <span wire:loading.remove wire:target="saveReport"><i class="fas fa-save mr-1"></i> Simpan Laporan</span>
+                                    <span wire:loading wire:target="saveReport" class="flex items-center">
+                                        <i class="fas fa-circle-notch animate-spin mr-1"></i> Menyimpan...
+                                    </span>
+                                </x-button>
+                                <x-button class="bg-red-600 hover:bg-red-700 text-white shadow-md" type="submit" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="generateReport"><i class="fas fa-file-download mr-1"></i> Generate Laporan</span>
+                                    <span wire:loading wire:target="generateReport" class="flex items-center">
+                                        <i class="fas fa-circle-notch animate-spin mr-1"></i> Memproses...
+                                    </span>
+                                </x-button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -585,6 +757,7 @@
                             </div>
                             
                             <!-- Fakultas filter for lampiran -->
+                            @if ($user->role->name == 'Universitas')
                             <div class="flex flex-col">
                                 <label for="lampiran_fakultas" class="text-sm font-medium text-gray-700 mb-1">Fakultas:</label>
                                 <div class="relative">
@@ -606,6 +779,7 @@
                                     </button>
                                 </div>
                             </div>
+                            @endif
                             
                             <div class="flex flex-col">
                                 <label for="file" class="text-sm font-medium text-gray-700 mb-1">File Lampiran:</label>
@@ -697,8 +871,79 @@
         </div>
     </div>
 
+    <!-- Akreditasi Rencana Tindak Lanjut Modal -->
+    <div x-show="akreditasiFormIsOpen" style="display: none" x-data="{ akreditasiFormIsOpen: @entangle('akreditasiFormIsOpen') }" x-on:keydown.escape.window="akreditasiFormIsOpen = false"
+        class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full h-full bg-black/30 backdrop-blur-sm">
+        <div class="relative p-4 w-full max-w-[70%]">
+            <!-- Modal content -->
+            <div class="relative bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-clipboard-list text-purple-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">
+                                Analisis Masalah dan Pemecahannya
+                            </h3>
+                            <p class="text-sm text-gray-600">{{ $currentAkreditasiProdi }}</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="akreditasiFormIsOpen = false"
+                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-2 inline-flex items-center"
+                        data-modal-hide="default-modal">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                <!-- Modal body -->
+                <div class="p-5 space-y-4">
+                    @if($currentAkreditasiId)
+                    <form wire:submit.prevent="saveAkreditasiRencanaTindakLanjut">
+                        <div class="mb-4">
+                            <label for="rencana_tindak_lanjut" class="block text-sm font-medium text-gray-700 mb-2">Analisis Masalah dan Pemecahannya:</label>
+                            <textarea id="rencana_tindak_lanjut" wire:model="akreditasiRencanaForms.{{ $currentAkreditasiId }}.rencana_tindak_lanjut" rows="4"
+                                class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500"
+                                placeholder="Masukkan rencana tindak lanjut"></textarea>
+                            @error('akreditasiRencanaForms.' . $currentAkreditasiId . '.rencana_tindak_lanjut')
+                                <p class="text-red-500 text-xs mt-1">{{ session('errors')->first('akreditasiRencanaForms.'.$currentAkreditasiId.'.rencana_tindak_lanjut') }}</p>
+                            @enderror
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="target_penyelesaian" class="block text-sm font-medium text-gray-700 mb-2">Target Penyelesaian:</label>
+                            <input type="text" id="target_penyelesaian" wire:model="akreditasiRencanaForms.{{ $currentAkreditasiId }}.target_penyelesaian"
+                                class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500"
+                                placeholder="Contoh: Desember 2024">
+                            @error('akreditasiRencanaForms.' . $currentAkreditasiId . '.target_penyelesaian')
+                                <p class="text-red-500 text-xs mt-1">{{ session('errors')->first('akreditasiRencanaForms.'.$currentAkreditasiId.'.target_penyelesaian') }}</p>
+                            @enderror
+                        </div>
+                        
+                        <div class="flex justify-end space-x-2 mt-6">
+                            <button type="button" @click="akreditasiFormIsOpen = false"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-black font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <span wire:loading.remove wire:target="saveAkreditasiRencanaTindakLanjut">Simpan</span>
+                                <span wire:loading wire:target="saveAkreditasiRencanaTindakLanjut">
+                                    <i class="fas fa-spinner fa-spin"></i> Menyimpan...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+       
+        <script src="https://cdn.tiny.cloud/1/{{ env('TINY_API', 'no-api-key') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
         <script>
             document.addEventListener("DOMContentLoaded", () => {
                 const elements = document.querySelectorAll('.multi-select');
@@ -706,6 +951,70 @@
                     removeItemButton: true,
                     allowHTML: true
                 }));
+
+                // Initialize TinyMCE on textareas with the rich-editor class
+                function initRichTextEditor() {
+                    if (document.querySelectorAll('.rich-editor').length > 0) {
+                        tinymce.remove();
+                        tinymce.init({
+                            selector: '.rich-editor',
+                            height: 300,
+                            menubar: false,
+                            plugins: [
+                                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                                'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                            ],
+                            toolbar: 'undo redo | blocks | ' +
+                                'bold italic backcolor | alignleft aligncenter ' +
+                                'alignright alignjustify | bullist numlist outdent indent | ' +
+                                'removeformat | help',
+                            setup: function (editor) {
+                                editor.on('change', function () {
+                                    editor.save(); // This triggers the change event on the textarea
+                                    const textareaId = editor.getElement().id;
+                                    const textarea = document.getElementById(textareaId);
+                                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                });
+                            }
+                        });
+                    }
+                }
+
+                // Watch for modal open events to initialize the editor
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.attributeName === 'style' && 
+                            mutation.target.style.display !== 'none' && 
+                            mutation.target.querySelector('.rich-editor')) {
+                            setTimeout(initRichTextEditor, 300);
+                        }
+                    });
+                });
+
+                // Monitor the modal container for display changes
+                const rtmReportModal = document.querySelector('[x-show="rtmReport"]');
+                if (rtmReportModal) {
+                    observer.observe(rtmReportModal, { attributes: true });
+                }
+
+                // Setup for alpinejs modals
+                window.addEventListener('alpine:initialized', () => {
+                    window.Alpine.effect(() => {
+                        if (window.Alpine.store('rtmReport')?.visible) {
+                            setTimeout(initRichTextEditor, 300);
+                        }
+                    });
+                });
+
+                // Livewire hook for reinitializing after component updates
+                document.addEventListener('livewire:load', function () {
+                    Livewire.hook('message.processed', (message, component) => {
+                        if (rtmReportModal && rtmReportModal.style.display !== 'none') {
+                            setTimeout(initRichTextEditor, 300);
+                        }
+                    });
+                });
             });
         </script>
     @endpush

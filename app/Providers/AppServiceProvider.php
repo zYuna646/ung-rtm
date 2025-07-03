@@ -6,6 +6,7 @@ use App\Services\AmiService;
 use App\Services\SurveiService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Component;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,5 +27,42 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void {}
+    public function boot(): void 
+    {
+        // Allow HTML content in specific Livewire component properties
+        Component::macro('getRichTextEditorRules', function () {
+            return [
+                'rtmReport.tujuan' => [
+                    function ($attribute, $value, $fail) {
+                        // This is a bypass rule to allow HTML content
+                    },
+                ],
+                'rtmReport.agenda_kegiatan' => [
+                    function ($attribute, $value, $fail) {
+                        // This is a bypass rule to allow HTML content
+                    },
+                ],
+                'rtmReport.peserta' => [
+                    function ($attribute, $value, $fail) {
+                        // This is a bypass rule to allow HTML content
+                    },
+                ],
+                'rtmReport.hasil' => [
+                    function ($attribute, $value, $fail) {
+                        // This is a bypass rule to allow HTML content
+                    },
+                ],
+                'rtmReport.kesimpulan' => [
+                    function ($attribute, $value, $fail) {
+                        // This is a bypass rule to allow HTML content
+                    },
+                ],
+                'rtmReport.penutup' => [
+                    function ($attribute, $value, $fail) {
+                        // This is a bypass rule to allow HTML content
+                    },
+                ],
+            ];
+        });
+    }
 }

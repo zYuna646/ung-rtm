@@ -36,6 +36,17 @@ class SurveiService
         return null;
     }
 
+    public function getAllProdi()
+    {
+        $response = Http::get($this->baseUrl . 'prodi');
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        return null;
+    }
+
     public function getAnchor()
     {
         try {

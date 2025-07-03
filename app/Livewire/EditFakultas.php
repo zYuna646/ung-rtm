@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Fakultas;
 use App\Services\AmiService;
 use App\Services\SurveiService;
+use App\Services\AkreditasiService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -19,8 +20,9 @@ class EditFakultas extends Component
     public $fakultas = [];
     public $ami_faculties = [];
     public $survei_faculties = [];
+    public $akreditasi_faculties = [];
 
-    public function mount($id, AmiService $amiService, SurveiService $surveiService)
+    public function mount($id, AmiService $amiService, SurveiService $surveiService, AkreditasiService $akreditasiService)
     {
         // Fetch fakultas data by ID from the model
         $fakultas = Fakultas::findOrFail($id);
@@ -46,6 +48,17 @@ class EditFakultas extends Component
             // Log the first faculty structure to debug
             if (!empty($this->survei_faculties) && isset($this->survei_faculties[0])) {
                 Log::info('Survei Faculty Structure (Edit):', $this->survei_faculties[0]);
+            }
+        }
+        
+        // Get faculty data from Akreditasi service
+        $akreditasiFacultyData = $akreditasiService->getAllFaculty();
+        if ($akreditasiFacultyData && isset($akreditasiFacultyData['data'])) {
+            $this->akreditasi_faculties = $akreditasiFacultyData['data'];
+            
+            // Log the first faculty structure to debug
+            if (!empty($this->akreditasi_faculties) && isset($this->akreditasi_faculties[0])) {
+                Log::info('Akreditasi Faculty Structure (Edit):', $this->akreditasi_faculties[0]);
             }
         }
     }

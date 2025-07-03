@@ -64,23 +64,23 @@
     <div class="container" style="display: flex; justify-content: space-between; height: 100%;">
         <div class="title-wrapper" style="margin-bottom: 120px">
             <div class="title" >LAPORAN</div>
-            <div class="title">RAPAT TINJAUAN MANAJEMEN</div>
-            <div class="title">FAKULTAS TEKNIK</div>
-            <div class="title">TAHUN 2022/2023</div>
+            <div class="title">{{$rtm->name}}</div>
+            <div class="title">{{$fakultas != 'Universitas' ? $fakultas : ''}}</div>
+            <div class="title">TAHUN {{ $reportData['tahun_akademik'] ?? '2022/2023' }}</div>
         </div>
-        <img class="logo" src="{{ public_path('logo/ung.png') }}" alt="Logo Universitas" style="margin-bottom: 120px">
+        <img class="logo" src="{{ public_path('images/ung.png') }}" alt="Logo Universitas" style="margin-bottom: 120px">
         <div class="subtitle-wrapper">
             <div class="subtitle">
                 UNIT PENJAMINAN MUTU
             </div>
             <div class="subtitle">
-                FAKULTAS TEKNIK
+                {{$fakultas != 'Universitas' ? $fakultas : ''}}
             </div>
             <div class="subtitle">
                 UNIVERSITAS NEGERI GORONTALO
             </div>
             <div class="subtitle">
-                2023
+                {{$rtm->tahun}}
             </div>
 
         </div>

@@ -24,8 +24,13 @@ class RtmReport extends Model
         'waktu_pelaksanaan',
         'tempat_pelaksanaan',
         'agenda',
+        'agenda_kegiatan',
         'peserta',
-        'tahun_akademik'
+        'tahun_akademik',
+        'tujuan',
+        'hasil',
+        'kesimpulan',
+        'penutup'
     ];
 
     /**

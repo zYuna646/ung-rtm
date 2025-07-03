@@ -113,11 +113,9 @@
                                 <select id="akreditasi" name="akreditasi" wire:model="fakultas.akreditasi"
                                     class="p-4 text-sm rounded-md bg-neutral-100 text-slate-600 border border-neutral-200">
                                     <option value="">Pilih Akreditasi</option>
-                                    <option value="1">Fakultas Ilmu Sosial</option>
-                                    <option value="2">Fakultas Ekonomi</option>
-                                    <option value="3">Fakultas Teknik</option>
-                                    <option value="4">Fakultas Hukum</option>
-                                    <option value="5">Fakultas Kedokteran</option>
+                                    @foreach ($akreditasi_faculties as $faculty)
+                                        <option value="{{ $faculty['fakultas_id'] }}">{{ $faculty['fakultas_nama'] ?? $faculty['nama'] ?? $faculty['faculty_name'] ?? 'Fakultas ID: '.$faculty['fakultas_id'] }}</option>
+                                    @endforeach
                                 </select>
                                 @error('fakultas.akreditasi')
                                     <span class="text-red-500 text-xs">{{ $message }}</span>
@@ -174,7 +172,12 @@
                                     @endphp
                                     {{ $surveiFaculty['name'] ?? $surveiFaculty['nama'] ?? $surveiFaculty['department_name'] ?? 'N/A' }}
                                 </td>
-                                <td>{{ $fakultas['akreditasi'] }}</td>
+                                <td>
+                                    @php
+                                        $akreditasiFaculty = collect($akreditasi_faculties)->firstWhere('fakultas_id', $fakultas['akreditasi']);
+                                    @endphp
+                                    {{ $akreditasiFaculty['name'] ?? $akreditasiFaculty['nama'] ?? $akreditasiFaculty['fakultas_nama'] ?? 'N/A' }}
+                                </td>
                                 <td>
                                     <div class="inline-flex gap-x-2">
                                         <!-- Edit button -->

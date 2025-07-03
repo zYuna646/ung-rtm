@@ -11,7 +11,10 @@ class Prodi extends Model
     protected $fillable = [
         'name',
         'code',
-        'fakultas_id'
+        'fakultas_id',
+        'ami',
+        'survei',
+        'akreditasi',
     ];
 
     public function fakultas()

@@ -68,6 +68,29 @@ class AmiService
         return null;
     }
 
+    public function getProgram()
+    {
+        $response = Http::get($this->baseUrl . 'programs');
+        if ($response->successful()) {
+            return $response->json();
+        }
+    }
+
+    public function getAllProdi()
+    {
+        try {
+            $response = Http::get($this->baseUrl . 'programs');
+            
+            if ($response->successful()) {
+                return $response->json();
+            }
+            
+            return null;
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
+
     // public function getAllPeriode()
     // {
     //     $response = Http::get($this->baseUrl . 'periodes');

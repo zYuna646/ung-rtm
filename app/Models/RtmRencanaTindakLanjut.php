@@ -24,7 +24,9 @@ class RtmRencanaTindakLanjut extends Model
     protected $fillable = [
         'rencana_tindak_lanjut',
         'target_penyelesaian',
-        'indicator_id',
+        'ami_id',
+        'survei_id',
+        'akreditasi_id',
         'rtm_id',
         'fakultas_id',
     ];

@@ -5,6 +5,9 @@
         setTimeout(() => showToast = false, 5000);
     }
 ">
+    @push('styles')
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    @endpush
     <!-- Toast -->
     <div x-show="showToast" x-transition
         :class="toastType === 'success' ? 'text-color-success-500' : 'text-color-danger-500'"
@@ -24,7 +27,7 @@
     </div>
     <section class="max-w-screen-xl w-full mx-auto px-4 pt-24" x-data="{ addModal : false }">
         <div
-            class="p-6 bg-white flex flex-col lg:flex-row lg:items-center gap-y-2 justify-between rounded-lg border border-slate-100 shadow-sm">
+            class="mt-4 p-6 bg-white flex flex-col lg:flex-row lg:items-center gap-y-2 justify-between rounded-lg border border-slate-100 shadow-sm">
             <div>
                 <h1 class="font-bold text-lg">{{ $master }}</h1>
                 <p class="text-slate-500 text-sm">List data {{ $master }} yang berhasil terinput dalam Database</p>
@@ -84,6 +87,46 @@
                                 @error('prodi.fakultas_id') <span class="text-red-500 text-xs">{{ $message }}</span>
                                 @enderror
                             </div>
+                            
+                            <!-- AMI Field -->
+                            <div class="flex flex-col gap-y-2 col-span-12 mb-4">
+                                <label for="ami" class="text-sm">ID AMI:</label>
+                                <select name="ami" id="ami" wire:model="prodi.ami"
+                                    class="p-4 text-sm rounded-md bg-neutral-100 text-slate-600 focus:outline-none focus:outline-color-info-500 border border-neutral-200">
+                                    <option value="">Pilih ID AMI</option>
+                                    @foreach($ami_prodis as $ami_prodi)
+                                    <option value="{{ $ami_prodi['id'] }}">{{ $ami_prodi['program_name'] }}</option>
+                                    @endforeach
+                                </select>
+                                @error('prodi.ami') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            <!-- Survei Field -->
+                            <div class="flex flex-col gap-y-2 col-span-12 mb-4">
+                                <label for="survei" class="text-sm">ID Survei:</label>
+                                <select name="survei" id="survei" wire:model="prodi.survei"
+                                    class="p-4 text-sm rounded-md bg-neutral-100 text-slate-600 focus:outline-none focus:outline-color-info-500 border border-neutral-200">
+                                    <option value="">Pilih ID Survei</option>
+                                    @foreach($survei_prodis as $survei_prodi)
+                                    <option value="{{ $survei_prodi['id'] }}">{{ $survei_prodi['name'] ?? $survei_prodi['nama'] ?? $survei_prodi['prodi_name'] ?? 'Prodi ID: '.$survei_prodi['id'] }}</option>
+                                    @endforeach
+                                </select>
+                                @error('prodi.survei') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            <!-- Akreditasi Field -->
+                            <div class="flex flex-col gap-y-2 col-span-12 mb-4">
+                                <label for="akreditasi" class="text-sm">Akreditasi:</label>
+                                <select name="akreditasi" id="akreditasi" wire:model="prodi.akreditasi"
+                                    class="p-4 text-sm rounded-md bg-neutral-100 text-slate-600 focus:outline-none focus:outline-color-info-500 border border-neutral-200">
+                                    <option value="">Pilih Akreditasi</option>
+                                    @foreach($akreditasi_prodis as $akreditasi_prodi)
+                                    <option value="{{ $akreditasi_prodi['prodi_id'] }}">{{ $akreditasi_prodi['prodi_nama'] }}</option>
+                                    @endforeach
+                                </select>
+                                @error('prodi.akreditasi') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            
                             <x-button class="inline-flex items-center w-fit gap-x-2 col-span-12" color="info"
                                 type="submit">
                                 <span wire:loading.remove>
@@ -110,6 +153,9 @@
                             <th>Kode</th>
                             <th>Nama</th>
                             <th>Fakultas</th>
+                            <th>AMI</th>
+                            <th>Survei</th>
+                            <th>Akreditasi</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -120,6 +166,24 @@
                             <td>{{ $prodi['code'] }}</td>
                             <td>{{ $prodi['name'] }}</td>
                             <td>{{ $prodi->fakultas->name }}</td>
+                            <td>
+                                @php
+                                    $amiProdi = collect($ami_prodis)->firstWhere('id', $prodi['ami']);
+                                @endphp
+                                {{ $amiProdi['program_name'] ?? 'N/A' }}
+                            </td>
+                            <td>
+                                @php
+                                    $surveiProdi = collect($survei_prodis)->firstWhere('id', $prodi['survei']);
+                                @endphp
+                                {{ $surveiProdi['name'] ?? $surveiProdi['nama'] ?? $surveiProdi['prodi_name'] ?? 'N/A' }}
+                            </td>
+                            <td>
+                                @php
+                                    $akreditasiProdi = collect($akreditasi_prodis)->firstWhere('prodi_id', $prodi['akreditasi']);
+                                @endphp
+                                {{ $akreditasiProdi['prodi_nama'] ?? 'N/A' }}
+                            </td>
                             <td>
                                 <div class="inline-flex gap-x-2">
                                     <!-- Edit button -->
@@ -151,10 +215,20 @@
     </script>
     <script>
         function confirmDelete(id) {
-            if(confirm(`Hapus prodi?`)) {
+            if(confirm(`Hapus prodi? ${id}`)) {
                 @this.call('deleteProdi', id);
             }
         }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const elements = document.querySelectorAll('.multi-select');
+            elements.forEach(el => new Choices(el, {
+                removeItemButton: true,
+                allowHTML: true
+            }));
+        });
     </script>
     @endpush
 </main>

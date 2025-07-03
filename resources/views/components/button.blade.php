@@ -25,6 +25,15 @@ $colorClasses = [
 'outlined_text' => 'text-color-primary-500',
 'outlined_hover' => 'hover:bg-color-primary-500 hover:text-white',
 ],
+'secondary' => [
+'bg' => 'bg-gray-500',
+'border' => 'border-gray-500',
+'text' => 'text-white',
+'hover' => 'hover:bg-gray-400',
+'outlined_bg' => 'bg-white',
+'outlined_text' => 'text-gray-500',
+'outlined_hover' => 'hover:bg-gray-500 hover:text-white',
+],
 'success' => [
 'bg' => 'bg-color-success-500',
 'border' => 'border-color-success-500',
