@@ -38,7 +38,11 @@
   "prodi": [
     {
       "name": "Dashboard",
-      "link": "dashboard"
+      "link": "dashboard.index"
+    },
+    {
+      "name": "RTM",
+      "link": "dashboard.master.rtm.index"
     }
   ],
   "fakultas": [

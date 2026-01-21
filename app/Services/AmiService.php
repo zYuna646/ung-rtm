@@ -37,13 +37,25 @@ class AmiService
         return null;
     }
 
+    public function getAmiProdi($id, $prodiId)
+    {
+        $response = Http::get($this->baseUrl . 'ami/' . $id . '/program/' . $prodiId);
+        if ($response->successful()) {
+            return $response->json();
+        }
+    }
+
     public function getAnchor()
     {
         try {
             $response = Http::get($this->baseUrl . 'periodes');
             return $response->json();
         } catch (\Throwable $th) {
-            return response()->json(['error' => 'Failed to fetch data', 'message' => $th->getMessage()], 500);
+            return [
+                'data' => [],
+                'error' => 'Failed to fetch data',
+                'message' => $th->getMessage(),
+            ];
         }
     }
 

@@ -84,6 +84,25 @@
                         </div>
                     </div>
 
+                    @if($selectedFakultas)
+                    <div>
+                        <label for="prodi" class="block text-sm font-medium text-gray-700 mb-2">Program Studi</label>
+                        <div class="relative" wire:key="prodi-dropdown">
+                            <select id="prodi" wire:model.live="selectedProdi"
+                                class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
+                                <option value="">Semua Program Studi</option>
+                            
+                                @foreach ($prodis as $prodi)
+                                    <option value="{{ $prodi->id }}">{{ $prodi->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     <div class="flex items-end">
                         <button wire:click="resetFilter"
                             class="w-full bg-gradient-to-r from-indigo-200 to-blue-200 hover:from-indigo-300 hover:to-blue-300 text-black font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg">
@@ -144,6 +163,7 @@
                     </div>
                     
                     <form wire:submit.prevent="saveRencanaTindakLanjut" class="space-y-6">
+                        @unless($isTemuan)
                         <div>
                             <label class="block text-gray-700 font-medium mb-3">Analisis Masalah dan Pemecahannya<span
                                     class="text-red-500">*</span></label>
@@ -154,6 +174,8 @@
                                 <p class="text-red-500 text-xs mt-1">{{ session('errors')->first('rencanaForms.'.$currentIndicatorId.'.rencana_tindak_lanjut') }}</p>
                             @enderror
                         </div>
+                        @endunless
+                        @unless($isTemuan)
                         <div>
                             <label class="block text-gray-700 font-medium mb-3">Target Penyelesaian <span
                                     class="text-red-500">*</span></label>
@@ -164,6 +186,7 @@
                                 <p class="text-red-500 text-xs mt-1">{{ session('errors')->first('rencanaForms.'.$currentIndicatorId.'.target_penyelesaian') }}</p>
                             @enderror
                         </div>
+                        @endunless
                         <div class="flex justify-end space-x-4 pt-4">
                             <button type="button" @click="$wire.closeRencanaForm()"
                                 class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 font-medium shadow-sm hover:shadow-md border border-gray-300">
@@ -202,7 +225,11 @@
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Data Survei</h2>
                     <p class="text-base text-gray-700">
-                        {{ $selectedFakultas ? App\Models\Fakultas::find($selectedFakultas)->name : 'Semua Fakultas' }}
+                        @if($user->role->name == 'Prodi')
+                            {{ $user->prodi->name }}
+                        @else
+                            {{ $selectedFakultas ? ($selectedProdi ? App\Models\Prodi::find($selectedProdi)->name : App\Models\Fakultas::find($selectedFakultas)->name) : 'Semua Fakultas' }}
+                        @endif
                     </p>
                 </div>
             </div>
@@ -229,80 +256,119 @@
                                         class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                                         IKM
                                     </th>
+                                    @unless($isTemuan)
                                     <th scope="col"
                                         class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Analisis Masalah dan Pemecahannya
                                     </th>
+                                    @endunless
+                                    @unless($isTemuan)
                                     <th scope="col"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Target Penyelesaian
                                     </th>
+                                    @endunless
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach ($surveiData['data']['tabel'] as $index => $item)
-                                    <tr class="hover:bg-indigo-50/30 transition-colors duration-200">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
-                                            {{ $index + 1 }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">{{ $item['name'] }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ floatval($item['nilai_butir']) >= 3.5 ? 'bg-green-100 text-green-800' : (floatval($item['nilai_butir']) >= 3 ? 'bg-blue-100 text-blue-800' : (floatval($item['nilai_butir']) >= 2.5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
-                                                {{ $item['nilai_butir'] }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ floatval($item['ikm']) >= 85 ? 'bg-green-100 text-green-800' : (floatval($item['ikm']) >= 75 ? 'bg-blue-100 text-blue-800' : (floatval($item['ikm']) >= 65 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
-                                                {{ number_format($item['ikm'], 2) }}%
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">
-                                            @if (isset($rencanaForms[$item['id']]) && !empty($rencanaForms[$item['id']]['rencana_tindak_lanjut']))
-                                                <div class="flex justify-between items-center gap-2">
-                                                    <div class="text-gray-800 pr-2">
-                                                        {{ $rencanaForms[$item['id']]['rencana_tindak_lanjut'] }}</div>
-                                                    <div class="flex gap-1">
-                                                        <button
-                                                            wire:click="openRencanaForm('{{ $item['id'] }}', '{{ $item['name'] }}')"
-                                                            class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1 px-2 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md flex-shrink-0">
-                                                            <i class="fas fa-edit text-xs"></i>
-                                                        </button>
-                                                        <button 
-                                                            onclick="if(confirm('Hapus rencana tindak lanjut ini?')) { @this.call('deleteRencanaTindakLanjut', '{{ $item['id'] }}'); }"
-                                                            class="text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md flex-shrink-0">
-                                                            <i class="fas fa-trash text-xs"></i>
-                                                        </button>
+                                @php
+                                    $tabelById = collect($surveiData['data']['tabel'])->keyBy('id');
+                                @endphp
+
+                                @if ($isTemuan && isset($surveiData['data']['survei']['aspek']) && is_array($surveiData['data']['survei']['aspek']))
+                                    @foreach ($surveiData['data']['survei']['aspek'] as $aspek)
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-3 bg-gray-100 text-gray-800 font-semibold">
+                                                {{ $aspek['name'] }}
+                                            </td>
+                                        </tr>
+
+                                        @php
+                                            $indicatorIds = collect($aspek['indicator'])->pluck('id');
+                                            $rows = $indicatorIds->map(function ($id) use ($tabelById) {
+                                                return $tabelById->get($id);
+                                            })->filter(function ($row) {
+                                                return is_array($row);
+                                            })->values();
+                                            $summary = $surveiData['data']['detail_rekapitulasi_aspek'][$aspek['id']] ?? null;
+                                        @endphp
+
+                                        @foreach ($rows as $i => $item)
+                                            <tr class="hover:bg-indigo-50/30 transition-colors duration-200">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">{{ $i + 1 }}</td>
+                                                <td class="px-6 py-4"><div class="text-sm text-gray-900">{{ $item['name'] }}</div></td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ floatval($item['nilai_butir']) >= 3.5 ? 'bg-green-100 text-green-800' : (floatval($item['nilai_butir']) >= 3 ? 'bg-blue-100 text-blue-800' : (floatval($item['nilai_butir']) >= 2.5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
+                                                        {{ $item['nilai_butir'] }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ floatval($item['ikm']) >= 85 ? 'bg-green-100 text-green-800' : (floatval($item['ikm']) >= 75 ? 'bg-blue-100 text-blue-800' : (floatval($item['ikm']) >= 65 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
+                                                        {{ number_format($item['ikm'], 2) }}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-3 bg-gray-50 text-sm text-gray-700">
+                                                @if ($summary)
+                                                    Rekap Aspek — Nilai Butir: <span class="font-semibold">{{ $summary['nilai_butir'] ?? '-' }}</span>,
+                                                    IKM: <span class="font-semibold">{{ number_format(floatval($summary['ikm'] ?? 0), 2) }}%</span>,
+                                                    Mutu Layanan: <span class="font-semibold">{{ $summary['mutu_layanan'] ?? '-' }}</span>,
+                                                    Kinerja Unit: <span class="font-semibold">{{ $summary['kinerja_unit'] ?? '-' }}</span>,
+                                                    Predikat Kepuasan: <span class="font-semibold">{{ $summary['predikat_kepuasan'] ?? '-' }}</span>
+                                                @else
+                                                    <span class="text-gray-400">Rekap Aspek tidak tersedia.</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    @foreach ($surveiData['data']['tabel'] as $index => $item)
+                                        <tr class="hover:bg-indigo-50/30 transition-colors duration-200">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">{{ $index + 1 }}</td>
+                                            <td class="px-6 py-4"><div class="text-sm text-gray-900">{{ $item['name'] }}</div></td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ floatval($item['nilai_butir']) >= 3.5 ? 'bg-green-100 text-green-800' : (floatval($item['nilai_butir']) >= 3 ? 'bg-blue-100 text-blue-800' : (floatval($item['nilai_butir']) >= 2.5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
+                                                    {{ $item['nilai_butir'] }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ floatval($item['ikm']) >= 85 ? 'bg-green-100 text-green-800' : (floatval($item['ikm']) >= 75 ? 'bg-blue-100 text-blue-800' : (floatval($item['ikm']) >= 65 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
+                                                    {{ number_format($item['ikm'], 2) }}%
+                                                </span>
+                                            </td>
+                                            @unless($isTemuan)
+                                            <td class="px-6 py-4 text-sm text-gray-600">
+                                                @if (isset($rencanaForms[$item['id']]) && !empty($rencanaForms[$item['id']]['rencana_tindak_lanjut']))
+                                                    <div class="flex justify-between items-center gap-2">
+                                                        <div class="text-gray-800 pr-2">{{ $rencanaForms[$item['id']]['rencana_tindak_lanjut'] }}</div>
+                                                        <div class="flex gap-1">
+                                                            <button wire:click="openRencanaForm('{{ $item['id'] }}', '{{ $item['name'] }}')" class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1 px-2 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md flex-shrink-0"><i class="fas fa-edit text-xs"></i></button>
+                                                            <button onclick="if(confirm('Hapus rencana tindak lanjut ini?')) { @this.call('deleteRencanaTindakLanjut', '{{ $item['id'] }}'); }" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md flex-shrink-0"><i class="fas fa-trash text-xs"></i></button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            @else
-                                                <button
-                                                    wire:click="openRencanaForm('{{ $item['id'] }}', '{{ $item['name'] }}')"
-                                                    class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1.5 px-3 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md">
-                                                    <i class="fas fa-plus text-xs mr-1"></i> Tambah
-                                                </button>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">
-                                            @if (isset($rencanaForms[$item['id']]) && !empty($rencanaForms[$item['id']]['target_penyelesaian']))
-                                                <div class="flex justify-between items-center">
-                                                    <div class="text-gray-800 pr-2">
-                                                        {{ $rencanaForms[$item['id']]['target_penyelesaian'] }}</div>
-                                                    <button
-                                                        wire:click="openRencanaForm('{{ $item['id'] }}', '{{ $item['name'] }}')"
-                                                        class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1 px-2 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md flex-shrink-0">
-                                                        <i class="fas fa-edit text-xs"></i>
-                                                    </button>
-                                                </div>
-                                            @else
-                                                <span class="text-gray-400">-</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                                @else
+                                                    <button wire:click="openRencanaForm('{{ $item['id'] }}', '{{ $item['name'] }}')" class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1.5 px-3 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md"><i class="fas fa-plus text-xs mr-1"></i> Tambah</button>
+                                                @endif
+                                            </td>
+                                            @endunless
+                                            @unless($isTemuan)
+                                            <td class="px-6 py-4 text-sm text-gray-600">
+                                                @if (isset($rencanaForms[$item['id']]) && !empty($rencanaForms[$item['id']]['target_penyelesaian']))
+                                                    <div class="flex justify-between items-center">
+                                                        <div class="text-gray-800 pr-2">{{ $rencanaForms[$item['id']]['target_penyelesaian'] }}</div>
+                                                        <button wire:click="openRencanaForm('{{ $item['id'] }}', '{{ $item['name'] }}')" class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1 px-2 rounded-full transition-colors duration-200 shadow-sm hover:shadow-md flex-shrink-0"><i class="fas fa-edit text-xs"></i></button>
+                                                    </div>
+                                                @else
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
+                                            </td>
+                                            @endunless
+                                        </tr>
+                                    @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>

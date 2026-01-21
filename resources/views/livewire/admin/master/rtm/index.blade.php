@@ -117,6 +117,25 @@
                                 @enderror
                             </div>
 
+                            @if (Auth::user()->role->name == 'Universitas')
+                                <div class="flex flex-col gap-y-2 col-span-12 mb-4">
+                                    <label class="text-sm">Jenis Laporan:</label>
+                                    <div class="inline-flex items-center gap-x-4">
+                                        <label class="inline-flex items-center gap-x-2">
+                                            <input type="radio" name="is_temuan" value="0" wire:model="rtm.is_temuan">
+                                            <span>Normal</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-x-2">
+                                            <input type="radio" name="is_temuan" value="1" wire:model="rtm.is_temuan">
+                                            <span>Temuan</span>
+                                        </label>
+                                    </div>
+                                    @error('rtm.is_temuan')
+                                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            @endif
+
                             <x-button class="inline-flex items-center w-fit gap-x-2 col-span-12" color="info"
                                 type="submit" id="submitBtn">
                                 <span wire:loading.remove><i class="fas fa-plus"></i></span>
@@ -203,6 +222,25 @@
                                     <span class="text-red-500 text-xs">{{ $message }}</span>
                                 @enderror
                             </div>
+
+                            @if (Auth::user()->role->name == 'Universitas')
+                                <div class="flex flex-col gap-y-2 col-span-12 mb-4">
+                                    <label class="text-sm">Jenis Laporan:</label>
+                                    <div class="inline-flex items-center gap-x-4">
+                                        <label class="inline-flex items-center gap-x-2">
+                                            <input type="radio" name="edit_is_temuan" value="0" wire:model="rtm.is_temuan">
+                                            <span>Normal</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-x-2">
+                                            <input type="radio" name="edit_is_temuan" value="1" wire:model="rtm.is_temuan">
+                                            <span>Temuan</span>
+                                        </label>
+                                    </div>
+                                    @error('rtm.is_temuan')
+                                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            @endif
 
                             <div class="flex gap-x-2 col-span-12">
                                 <x-button class="inline-flex items-center w-fit gap-x-2" color="secondary"

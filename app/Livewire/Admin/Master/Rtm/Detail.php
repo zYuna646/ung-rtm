@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Master\Rtm;
 
 use App\Models\Fakultas;
+use App\Models\Prodi;
 use App\Models\RTM;
 use App\Models\RtmLampiran;
 use App\Services\AmiService;
@@ -32,7 +33,7 @@ class Detail extends Component
     private $view = "livewire.admin.master.rtm.detail";
     public $fakultas = [];
 
-    public $prodi = [];
+    public $prodis = [];
     public $akreditasi = [];
     public $survei = [];
     public $ami = [];
@@ -43,6 +44,7 @@ class Detail extends Component
     public $akreditasiExpiringSoon = [];
 
     public $selectedFakultas = null;
+    public $selectedProdi = null;
     public $reportFakultas = null;
     public $surveyFakultas = null;
     public $surveyData = [];
@@ -54,6 +56,7 @@ class Detail extends Component
     public $currentAkreditasiId = null;
     public $user = null;
     public $currentAkreditasiProdi = null;
+    public $isTemuanReport = false;
 
     public $rtmReport = [
         'mengetahui1_nama' => '',
@@ -98,19 +101,33 @@ class Detail extends Component
         $this->anchor_survei = $surveiService->getAnchor()['data'];
         $this->rtm = RTM::find($id);
         $this->user = Auth::user();
+
+        // Set initial filters based on user role
         if ($this->user->role->name == 'Fakultas') {
             $this->selectedFakultas = $this->user->fakultas_id;
-        }
-        else
-        {
+            $this->loadProdis(); // Load prodis for fakultas
+        } elseif ($this->user->role->name == 'Prodi') {
+            $this->selectedFakultas = $this->user->fakultas_id;
+            $this->selectedProdi = $this->user->prodi_id;
+            $this->loadProdis(); // Load prodis for fakultas
+        } else {
             $this->selectedFakultas = null;
         }
-        $rtmReport = RtmReport::where('rtm_id', $this->rtm->id)->where('fakultas_id', $this->selectedFakultas ? $this->selectedFakultas : null)->first();
+
+        $rtmReport = RtmReport::where('rtm_id', $this->rtm->id)
+            ->when($this->user->role->name == 'Prodi', function ($query) {
+                return $query->where('prodi_id', $this->user->prodi_id);
+            }, function ($query) {
+                return $query->where('fakultas_id', $this->selectedFakultas ? $this->selectedFakultas : null);
+            })
+            ->first();
+
         if ($rtmReport) {
             $this->rtmReport = $rtmReport->toArray();
         } else {
             $this->rtmReport = null;
         }
+
         $this->fakultas = Fakultas::all();
         $this->loadLampiran();
         $this->loadAkreditasiData($akreditasiService);
@@ -122,22 +139,54 @@ class Detail extends Component
 
     public function loadAkreditasiData(AkreditasiService $akreditasiService)
     {
-        $fakultasId = null;
-
-        if ($this->selectedFakultas) {
-            $fakultas = Fakultas::find($this->selectedFakultas);
-            if ($fakultas && !empty($fakultas->akreditasi)) {
-                $fakultasId = $fakultas->akreditasi;
+        if ($this->user->role->name == 'Prodi') {
+            // For Prodi role, only show their own akreditasi
+            $result = $akreditasiService->getAkreditas($this->user->fakultas->akreditasi);
+            if ($result && isset($result['data']) && isset($result['data']['akreditasi_expiring'])) {
+                $prodi = Prodi::find($this->user->prodi_id);
+                $this->akreditasiExpiringSoon = collect($result['data']['akreditasi_expiring'])
+                    ->filter(function ($item) use ($prodi) {
+                        return $item['akre_prodi'] == $prodi->akreditasi;
+                    });
+            } else {
+                $this->akreditasiExpiringSoon = collect([]);
             }
         } else {
+            // For other roles, show filtered data
             $fakultasId = null;
-        }
+            if ($this->selectedFakultas) {
+                $fakultas = Fakultas::find($this->selectedFakultas);
+                if ($fakultas && !empty($fakultas->akreditasi)) {
+                    $fakultasId = $fakultas->akreditasi;
+                }
+            }
+     
+            $result = $akreditasiService->getAkreditas($fakultasId);
+            if ($result && isset($result['data']) && isset($result['data']['akreditasi_expiring'])) {
+                $this->akreditasiExpiringSoon = collect($result['data']['akreditasi_expiring']);
 
-        $result = $akreditasiService->getAkreditas($fakultasId);
-        if ($result && isset($result['data']) && isset($result['data']['akreditasi_expiring'])) {
-            $this->akreditasiExpiringSoon = collect($result['data']['akreditasi_expiring']);
-        } else {
-            $this->akreditasiExpiringSoon = collect([]);
+                // Filter by selected prodi if set
+                if ($this->selectedProdi) {
+                    $prodi = Prodi::find($this->selectedProdi);
+                    $this->akreditasiExpiringSoon = $this->akreditasiExpiringSoon->filter(function ($item) use ($prodi) {
+                        return $item['akre_prodi'] == $prodi->akreditasi;
+                    });
+                } elseif ($this->selectedFakultas) {
+                    // If fakultas is selected but prodi isn't, show all prodi data for that fakultas
+                    $fakultas = Fakultas::find($this->selectedFakultas);
+                    if ($fakultas) {
+                        if ($this->selectedProdi) {
+                            $prodi = Prodi::find($this->selectedProdi);
+                            $this->akreditasiExpiringSoon = $this->akreditasiExpiringSoon->filter(function ($item) use ($prodi) {
+                                return $item['akre_prodi'] == $prodi->akreditasi;
+                            });
+                        }
+                 
+                    }
+                }
+            } else {
+                $this->akreditasiExpiringSoon = collect([]);
+            }
         }
     }
 
@@ -210,6 +259,7 @@ class Detail extends Component
                 'akreditasi_id' => $this->currentAkreditasiId,
                 'rtm_id' => $this->rtm->id,
                 'fakultas_id' => $this->selectedFakultas,
+                'prodi_id' => $this->selectedProdi,
             ],
             [
                 'rencana_tindak_lanjut' => $this->akreditasiRencanaForms[$this->currentAkreditasiId]['rencana_tindak_lanjut'],
@@ -246,17 +296,35 @@ class Detail extends Component
 
     public function loadLampiran()
     {
-        $query = RtmLampiran::where('rtm_id', $this->rtm->id)->where('fakultas_id', $this->selectedFakultas);
+        $query = RtmLampiran::where('rtm_id', $this->rtm->id);
+
+        if ($this->user->role->name == 'Prodi') {
+            // Prodi can only see their own lampiran
+            $query->where('prodi_id', $this->user->prodi_id);
+        } else {
+            // Other roles can filter
+            if ($this->selectedFakultas) {
+                $query->where('fakultas_id', $this->selectedFakultas);
+
+                if ($this->selectedProdi) {
+                    $query->where('prodi_id', $this->selectedProdi);
+                }
+            }
+        }
+
         $this->lampiran = $query->get();
     }
 
     public function resetFilter()
     {
-        $this->selectedFakultas = null;
-        $this->loadLampiran();
-        $this->loadAkreditasiData(app(AkreditasiService::class));
-        $this->initializeAkreditasiRencanaForms();
-        $this->page = 1;
+        if ($this->user->role->name != 'Prodi') {
+            $this->selectedFakultas = null;
+            $this->selectedProdi = null;
+            $this->loadLampiran();
+            $this->loadAkreditasiData(app(AkreditasiService::class));
+            $this->initializeAkreditasiRencanaForms();
+            $this->page = 1;
+        }
     }
 
     public function render()
@@ -273,6 +341,8 @@ class Detail extends Component
 
     public function updatedSelectedFakultas()
     {
+        $this->selectedProdi = null; // Reset prodi selection when fakultas changes
+        $this->loadProdis(); // Load prodis for selected fakultas
         $this->loadLampiran();
         $this->loadAkreditasiData(app(AkreditasiService::class));
         $this->initializeAkreditasiRencanaForms();
@@ -282,15 +352,38 @@ class Detail extends Component
         $this->loadDefaultReportValues();
     }
 
+    public function loadProdis()
+    {
+        if ($this->selectedFakultas) {
+            $fakultas = Fakultas::find($this->selectedFakultas);
+            if ($fakultas) {
+                $this->prodis = $fakultas->prodis()->get();
+            } else {
+                $this->prodis = [];
+            }
+        } else {
+            $this->prodis = [];
+        }
+    }
+
     public function uploadLampiran()
     {
         $this->validate([
             'newLampiran.judul' => 'required|string|max:255',
-            'newLampiran.file' => 'required|file|max:10240', // 10MB max file size
+            'newLampiran.file' => 'required|image|mimes:png,jpg,jpeg|max:10240', // Only images, max 10MB
+        ], [
+            'newLampiran.file.image' => 'File harus berupa gambar (png, jpg, jpeg)',
+            'newLampiran.file.mimes' => 'File harus berupa gambar dengan format png, jpg, atau jpeg',
         ]);
 
         try {
             $file = $this->newLampiran['file'];
+            
+            // Null check
+            if (!$file) {
+                throw new \Exception('Tidak ada file yang diunggah');
+            }
+
             $originalName = $file->getClientOriginalName();
             $fileType = $file->getClientOriginalExtension();
             $fileSize = $file->getSize();
@@ -299,17 +392,22 @@ class Detail extends Component
             $file->storeAs('public/rtm_lampiran', $fileName);
             $path = 'rtm_lampiran/' . $fileName;
 
-            $fakultasId = null; // Default for university level
+            $fakultasId = null;
+            $prodiId = null;
 
-            // Use the selectedFakultas for fakultasId if it's set
-            if ($this->selectedFakultas) {
+            if ($this->user->role->name == 'Prodi') {
+                $fakultasId = $this->user->fakultas_id;
+                $prodiId = $this->user->prodi_id;
+            } else {
                 $fakultasId = $this->selectedFakultas;
+                $prodiId = $this->selectedProdi;
             }
 
             // Save to database
             RtmLampiran::create([
                 'rtm_id' => $this->rtm->id,
                 'fakultas_id' => $fakultasId,
+                'prodi_id' => $prodiId,
                 'judul' => $this->newLampiran['judul'],
                 'file_path' => $path,
                 'file_name' => $originalName,
@@ -393,6 +491,7 @@ class Detail extends Component
         RtmReport::updateOrCreate([
             'rtm_id' => $this->rtm->id,
             'fakultas_id' => $this->selectedFakultas,
+            'prodi_id' => $this->selectedProdi,
         ], [
             'mengetahui1_nama' => $this->rtmReport['mengetahui1_nama'],
             'mengetahui1_jabatan' => $this->rtmReport['mengetahui1_jabatan'],
@@ -479,7 +578,15 @@ class Detail extends Component
         $ami_data_by_period = [];
         if (!empty($this->rtm->ami_anchor)) {
             foreach ($this->rtm->ami_anchor as $anchorId) {
-                $amiResult = $amiService->getAmi($anchorId, $this->selectedFakultas ? $fakultas->ami : 'null');
+                if ($this->selectedProdi) {
+                    $prodiAmiId = Prodi::find($this->selectedProdi)->ami;
+                    $amiResult = $amiService->getAmiProdi($anchorId, $prodiAmiId);
+                    $amiResult['data'] = $amiResult['data']['rtm'];
+                }
+                else
+                {
+                    $amiResult = $amiService->getAmi($anchorId, $this->selectedFakultas ? $fakultas->ami : 'null');
+                }
                 if (isset($amiResult['data']) && !empty($amiResult['data'])) {
                     // Store the period name and data separately
                     $matchedAnchor = collect($this->anchor_ami)->firstWhere('id', $anchorId);
@@ -498,11 +605,22 @@ class Detail extends Component
                     //     ->get()
                     //     ->keyBy('ami_id');
 
-                    $amiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
-                        ->where('fakultas_id', $this->selectedFakultas)
-                        ->where('ami_id', '!=', null)
-                        ->get()
-                        ->keyBy('ami_id');
+                    if ($this->selectedProdi) {
+                        $amiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
+                            ->where('prodi_id', $this->selectedProdi)
+                            ->where('ami_id', '!=', null)
+                            ->get()
+                            ->keyBy('ami_id');
+                    } else {
+                        $amiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
+                            ->where('fakultas_id', $this->selectedFakultas)
+                            ->where('prodi_id', null)
+                            ->where('ami_id', '!=', null)
+                            ->get()
+                            ->keyBy('ami_id');
+                    }
+
+
 
 
                     // Group AMI data by category for this period
@@ -515,13 +633,22 @@ class Detail extends Component
                         $category_scores = [];
 
                         foreach ($items as $key => $indicator) {
+                            // Attach RTL if exists, but do not require it in Temuan mode
                             if (isset($amiRtlData[$indicator['id']])) {
                                 $indicator['rencana_tindak_lanjut'] = $amiRtlData[$indicator['id']]->rencana_tindak_lanjut;
                                 $indicator['target_penyelesaian'] = $amiRtlData[$indicator['id']]->target_penyelesaian;
+                            }
 
-                                // Only include indicators that have RTL data (not empty)
+                            if ($this->isTemuanReport) {
+                                // Temuan mode: include all indicators (no RTL requirement)
+                                if (isset($indicator['score']) && is_numeric($indicator['score'])) {
+                                    $category_scores[] = $indicator['score'];
+                                    $all_scores[] = $indicator['score'];
+                                }
+                                $tmp[] = $indicator;
+                            } else {
+                                // Normal mode: include only indicators that have RTL data
                                 if (!empty($indicator['rencana_tindak_lanjut']) || !empty($indicator['target_penyelesaian'])) {
-                                    // Collect scores for averaging
                                     if (isset($indicator['score']) && is_numeric($indicator['score'])) {
                                         $category_scores[] = $indicator['score'];
                                         $all_scores[] = $indicator['score'];
@@ -529,7 +656,6 @@ class Detail extends Component
                                     $tmp[] = $indicator;
                                 }
                             }
-                            // Skip indicators without RTL data
                         }
 
                         // Only add category if it has indicators with RTL
@@ -564,53 +690,64 @@ class Detail extends Component
         $survei_data_by_period = [];
         if (!empty($this->rtm->survei_anchor)) {
             foreach ($this->rtm->survei_anchor as $anchorId) {
-                $surveiResult = $surveiService->getSurvei($anchorId, $this->selectedFakultas ? $fakultas->survei : 'null');
+                $surveiTotalItem = $this->isTemuanReport ? 0 : 5;
+
+                // Ikuti pola filter ViewSurvei: gunakan getSurvei/getSurveiProdi
+                if ($this->selectedProdi) {
+                    // Prodi: selalu berdasarkan prodi terpilih
+                    $surveiResult = $surveiService->getSurveiProdi($anchorId, $this->selectedProdi, $surveiTotalItem);
+                } else {
+                    // Fakultas atau Universitas: gunakan mapping survei fakultas jika ada, jika tidak 'null'
+                    $fakultasSurveiId = 'null';
+                    if ($this->selectedFakultas && $fakultas) {
+                        $fakultasSurveiId = $fakultas->survei;
+                    }
+                    $surveiResult = $surveiService->getSurvei($anchorId, $fakultasSurveiId, $surveiTotalItem);
+                }
                 if (isset($surveiResult['data']) && !empty($surveiResult['data'])) {
-                    // Store the period name and data separately
                     $matchedAnchor = collect($this->anchor_survei)->firstWhere('id', $anchorId);
                     $periodName = $matchedAnchor['name'] ?? 'Periode Survei ' . $anchorId;
 
-                    // Get Rencana Tindak Lanjut data for each survey indicator in this period
-                    // $surveiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
-                    //     ->when(isset($this->selectedFakultas), function ($query) {
-                    //         if ($this->selectedFakultas) {
-                    //             $query->where('fakultas_id', $this->selectedFakultas);
-                    //         } else {
-                    //             $query->whereNull('fakultas_id');
-                    //         }
-                    //     })
-                    //     ->where('survei_id', '!=', null)
-                    //     ->get()
-                    //     ->keyBy('survei_id');
+                    // Base dataset for this period
+                    $surveiPeriodData = $surveiResult['data'];
 
-                    $surveiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
-                        ->where('fakultas_id', $this->selectedFakultas)
-                        ->where('survei_id', '!=', null)
-                        ->get()
-                        ->keyBy('survei_id');
+                    // Attach RTL only for normal mode and filter tabel accordingly
+                    if (!$this->isTemuanReport && isset($surveiPeriodData['tabel'])) {
+                        if ($this->selectedProdi) {
+                            $surveiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
+                                ->where('prodi_id', $this->selectedProdi)
+                                ->where('survei_id', '!=', null)
+                                ->get()
+                                ->keyBy('survei_id');
+                        } else {
+                            $surveiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
+                                ->where('fakultas_id', $this->selectedFakultas)
+                                ->where('prodi_id', null)
+                                ->where('survei_id', '!=', null)
+                                ->get()
+                                ->keyBy('survei_id');
+                        }
 
-                    // Group survey data for this period
-                    $grouped_data = [];
-                    if (isset($surveiResult['data']['tabel'])) {
-                        $indicators = $surveiResult['data']['tabel'];
-                        foreach ($indicators as $index => $indicator) {
-                            // Add RTL data if exists
+                        $filtered = [];
+                        foreach ($surveiPeriodData['tabel'] as $indicator) {
                             if (isset($surveiRtlData[$indicator['id']])) {
                                 $indicator['rencana_tindak_lanjut'] = $surveiRtlData[$indicator['id']]->rencana_tindak_lanjut;
                                 $indicator['target_penyelesaian'] = $surveiRtlData[$indicator['id']]->target_penyelesaian;
-
-                                // Only include indicators that have RTL data (not empty)
-                                if (!empty($indicator['rencana_tindak_lanjut']) || !empty($indicator['target_penyelesaian'])) {
-                                    $grouped_data[] = $indicator;
-                                }
                             }
-                            // Skip indicators without RTL data
+                            if (!empty($indicator['rencana_tindak_lanjut']) || !empty($indicator['target_penyelesaian'])) {
+                                $filtered[] = $indicator;
+                            }
                         }
+
+                        // Replace tabel with filtered list (normal mode)
+                        $surveiPeriodData['tabel'] = $filtered;
                     }
 
-                    // Only add period if it has data with RTL
-                    if (!empty($grouped_data)) {
-                        $survei_data_by_period[$periodName] = $grouped_data;
+                    // Add period if has any tabel rows or has aspek info (temuan)
+                    $hasRows = isset($surveiPeriodData['tabel']) && count($surveiPeriodData['tabel']) > 0;
+                    $hasAspek = isset($surveiPeriodData['survei']['aspek']) && is_array($surveiPeriodData['survei']['aspek']) && count($surveiPeriodData['survei']['aspek']) > 0;
+                    if ($hasRows || ($this->isTemuanReport && $hasAspek)) {
+                        $survei_data_by_period[$periodName] = $surveiPeriodData;
                     }
                 }
             }
@@ -644,12 +781,21 @@ class Detail extends Component
                 //     ->get()
                 //     ->keyBy('akreditasi_id');
 
-                $akreditasiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
-                    ->where('fakultas_id', $this->selectedFakultas)
-                    ->where('akreditasi_id', '!=', null)
-                    ->get()
-                    ->keyBy('akreditasi_id');
+                if ($this->selectedProdi) {
+                    $akreditasiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
+                        ->where('prodi_id', $this->selectedProdi)
+                        ->where('akreditasi_id', '!=', null)
+                        ->get()
+                        ->keyBy('akreditasi_id');
+                } else {
+                    $akreditasiRtlData = RtmRencanaTindakLanjut::where('rtm_id', $this->rtm->id)
+                        ->where('fakultas_id', $this->selectedFakultas)
+                        ->where('prodi_id', null)
+                        ->where('akreditasi_id', '!=', null)
+                        ->get()
+                        ->keyBy('akreditasi_id');
 
+                }
 
                 // Add RTL data to each akreditasi record
                 foreach ($akreditasi_data as $key => $akreditasi) {
@@ -659,10 +805,12 @@ class Detail extends Component
                     }
                 }
 
-                // Filter to only include akreditasi with RTL data
-                $akreditasi_data = array_filter($akreditasi_data, function ($akreditasi) {
-                    return !empty($akreditasi['rencana_tindak_lanjut']) || !empty($akreditasi['target_penyelesaian']);
-                });
+                // In normal mode, include only akreditasi with RTL; in Temuan, include all
+                if (!$this->isTemuanReport) {
+                    $akreditasi_data = array_filter($akreditasi_data, function ($akreditasi) {
+                        return !empty($akreditasi['rencana_tindak_lanjut']) || !empty($akreditasi['target_penyelesaian']);
+                    });
+                }
             }
         }
 
@@ -671,6 +819,7 @@ class Detail extends Component
         return [
             'rtm' => $this->rtm,
             'reportData' => $this->rtmReport,
+            'is_temuan_report' => $this->isTemuanReport,
             'tanggal' => !empty($this->rtmReport['tanggal_pelaksanaan']) ?
                 Carbon::parse($this->rtmReport['tanggal_pelaksanaan'])->format('d F Y') :
                 Carbon::now()->format('d F Y'),
@@ -678,6 +827,7 @@ class Detail extends Component
                 Carbon::parse($this->rtmReport['waktu_pelaksanaan'])->format('H:i') :
                 Carbon::now()->format('H:i'),
             'fakultas' => $this->selectedFakultas ? Fakultas::find($this->selectedFakultas)->name : 'Universitas',
+            'prodi' => $this->selectedProdi ? Prodi::find($this->selectedProdi)->name : 'Prodi',
             'lampiran' => $this->lampiran,
             'ami_data_by_period' => $ami_data_by_period,
             'survei_data_by_period' => $survei_data_by_period,
@@ -713,7 +863,8 @@ class Detail extends Component
             $pdfOptions = [
                 'isRemoteEnabled' => true,
                 'isHtml5ParserEnabled' => true,
-                'chroot' => public_path()
+                // Allow DomPDF to access both public and storage directories via absolute paths
+                'chroot' => base_path(),
             ];
 
             // Generate the PDF
@@ -770,9 +921,9 @@ class Detail extends Component
                 $pdfMerger->addPDF(storage_path('app/' . $file), 'all');
             }
 
-            // Add lampiran files from database if available
+            // Add lampiran files from database if available (PDF only)
             foreach ($this->lampiran as $lampiran) {
-                if (\Storage::exists($lampiran->file_path) && in_array($lampiran->file_type, ['pdf'])) {
+                if (\Storage::exists($lampiran->file_path) && in_array(strtolower($lampiran->file_type), ['pdf'])) {
                     $pdfMerger->addPDF(storage_path('app/' . $lampiran->file_path), 'all');
                 }
             }
@@ -791,10 +942,21 @@ class Detail extends Component
             session()->flash('toastMessage', 'Laporan RTM berhasil dibuat!');
             session()->flash('toastType', 'success');
 
+            if ($data['fakultas'] != 'Universitas') {
+                if ($data['prodi'] != 'Prodi') {
+                    $fileName = "Laporan RTM {$this->rtm->name} Tahun {$this->rtm->tahun} {$data['fakultas']} {$data['prodi']}.pdf";
+                } else {
+                    $fileName = "Laporan RTM {$this->rtm->name} Tahun {$this->rtm->tahun} {$data['fakultas']}.pdf";
+                }
+            } else {
+                $fileName = "Laporan RTM {$this->rtm->name} Tahun {$this->rtm->tahun}.pdf";
+            }
+
+
             // Return download response
             return response()->download(
                 storage_path('app/' . $finalFilePath),
-                "Laporan RTM {$this->rtm->name} Tahun {$this->rtm->tahun} {$data['fakultas']}.pdf"
+                $fileName
             )->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             \Log::error('PDF generation error: ' . $e->getMessage());

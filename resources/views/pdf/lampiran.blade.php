@@ -233,6 +233,7 @@
 </head>
 
 <body>
+    @php $isTemuan = !empty($is_temuan_report); @endphp
     <h1 class="heading-1">
         LAMPIRAN {{ $rtm->name }}
     </h1>
@@ -301,8 +302,10 @@
                             <th style="width: 8%;">Tanggal Kadaluarsa</th>
                             <th style="width: 6%;">Batas Berlaku</th> --}}
                             <th style="width: 6%;">Peringatan</th>
-                            <th style="width: 15%;">Analisis Masalah dan Pemecahannya</th>
-                            <th style="width: 14%;">Target Penyelesaian</th>
+                            @if (!$isTemuan)
+                                <th style="width: 15%;">Analisis Masalah dan Pemecahannya</th>
+                                <th style="width: 14%;">Target Penyelesaian</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -322,8 +325,10 @@
                                         {{ $akreditasi['peringatan'] }}
                                     </div>
                                 </td>
-                                <td>{{ $akreditasi['rencana_tindak_lanjut'] ?? '-' }}</td>
-                                <td>{{ $akreditasi['target_penyelesaian'] ?? '-' }}</td>
+                                @if (!$isTemuan)
+                                    <td>{{ $akreditasi['rencana_tindak_lanjut'] ?? '-' }}</td>
+                                    <td>{{ $akreditasi['target_penyelesaian'] ?? '-' }}</td>
+                                @endif
                             </tr>
                         @endforeach
                 </tbody>
@@ -353,58 +358,72 @@
                                     <th style="width: 5%;">Sesuai</th>
                                     <th style="width: 5%;">Tidak Sesuai</th>
                                     <th style="width: 10%;">Capaian Kinerja</th>
-                                    <th style="width: 15%;">Analisis Masalah dan Pemecahannya</th>
-                                    <th style="width: 15%;">Target Penyelesaian</th>
+                                    @if (!$isTemuan)
+                                        <th style="width: 15%;">Analisis Masalah dan Pemecahannya</th>
+                                        <th style="width: 15%;">Target Penyelesaian</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($amiData['categories'] as $category => $indicators)
                                     <tr>
-                                        <td colspan="8" class="category-header">{{ $category }}</td>
+                                        <td colspan="{{ $isTemuan ? 5 : 7 }}" class="category-header">{{ $category }}</td>
                                     </tr>
                                     @foreach ($indicators as $indicator)
                                         <tr>
                                             <td style="text-align: center;">{{ $indicator['code'] }}</td>
                                             <td>{{ $indicator['desc'] }}</td>
                                             <td style="text-align: center;">
-                                                @if(is_array($indicator['sesuai']))
-                                                    {{ count($indicator['sesuai']) }}
+                                                @if($indicator['sesuai_count'])
+                                                    {{ $indicator['sesuai_count'] }}
                                                 @else
                                                     0
                                                 @endif
                                             </td>
                                             <td style="text-align: center;">
-                                                @if(is_array($indicator['tidak_sesuai']))
-                                                    {{ count($indicator['tidak_sesuai']) }}
+                                                @if($indicator['tidak_sesuai_count'])
+                                                    {{ $indicator['tidak_sesuai_count'] }}
                                                 @else
                                                     0
                                                 @endif
                                             </td>
                                             <td style="text-align: center;">{{ $indicator['score'] }}%</td>
-                                            <td>
-                                                @if (isset($indicator['rencana_tindak_lanjut']))
-                                                    {{ $indicator['rencana_tindak_lanjut'] }}
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if (isset($indicator['target_penyelesaian']))
-                                                    {{ $indicator['target_penyelesaian'] }}
-                                                @endif
-                                            </td>
+                                            @if (!$isTemuan)
+                                                <td>
+                                                    @if (isset($indicator['rencana_tindak_lanjut']))
+                                                        {{ $indicator['rencana_tindak_lanjut'] }}
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if (isset($indicator['target_penyelesaian']))
+                                                        {{ $indicator['target_penyelesaian'] }}
+                                                    @endif
+                                                </td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                     <!-- Category Average Row -->
                                     <tr>
-                                        <td colspan="5" class="category-average">Rata-rata {{ $category }}:</td>
-                                        <td style="text-align: center; font-weight: bold; background-color: #f0f0f0; border-top: 1px solid #a0a0a0;">{{ $amiData['category_averages'][$category] }}%</td>
-                                        <td colspan="2" style="background-color: #f0f0f0; border-top: 1px solid #a0a0a0;"></td>
+                                        @if ($isTemuan)
+                                            <td colspan="4" class="category-average">Rata-rata {{ $category }}:</td>
+                                            <td style="text-align: center; font-weight: bold; background-color: #f0f0f0; border-top: 1px solid #a0a0a0;">{{ $amiData['category_averages'][$category] }}%</td>
+                                        @else
+                                            <td colspan="5" class="category-average">Rata-rata {{ $category }}:</td>
+                                            <td style="text-align: center; font-weight: bold; background-color: #f0f0f0; border-top: 1px solid #a0a0a0;">{{ $amiData['category_averages'][$category] }}%</td>
+                                            <td colspan="2" style="background-color: #f0f0f0; border-top: 1px solid #a0a0a0;"></td>
+                                        @endif
                                     </tr>
                                 @endforeach
                                 <!-- Overall Average Row -->
                                 <tr>
-                                    <td colspan="5" class="overall-average">Rata-rata Keseluruhan:</td>
-                                    <td style="text-align: center; font-weight: bold; background-color: #e0e0e0; border-top: 2px solid #000;">{{ $amiData['overall_average'] }}%</td>
-                                    <td colspan="2" style="background-color: #e0e0e0; border-top: 2px solid #000;"></td>
+                                    @if ($isTemuan)
+                                        <td colspan="4" class="overall-average">Rata-rata Keseluruhan:</td>
+                                        <td style="text-align: center; font-weight: bold; background-color: #e0e0e0; border-top: 2px solid #000;">{{ $amiData['overall_average'] }}%</td>
+                                    @else
+                                        <td colspan="5" class="overall-average">Rata-rata Keseluruhan:</td>
+                                        <td style="text-align: center; font-weight: bold; background-color: #e0e0e0; border-top: 2px solid #000;">{{ $amiData['overall_average'] }}%</td>
+                                        <td colspan="2" style="background-color: #e0e0e0; border-top: 2px solid #000;"></td>
+                                    @endif
                                 </tr>
                             </tbody>
                         </table>
@@ -427,7 +446,11 @@
             @foreach ($survei_data_by_period as $periodName => $surveiData)
                 <div class="period-header">{{ $periodName }}</div>
 
-                @if (count($surveiData) > 0)
+                @php
+                    // Build lookup for indikator by id from tabel
+                    $tabelById = collect($surveiData['tabel'] ?? [])->keyBy('id');
+                @endphp
+                @if ((isset($surveiData['tabel']) && count($surveiData['tabel']) > 0) || ($isTemuan && isset($surveiData['survei']['aspek']) && count($surveiData['survei']['aspek']) > 0))
                     <div class="table-container">
                         <table>
                             <thead>
@@ -436,29 +459,70 @@
                                     <th style="width: 40%;">Indikator</th>
                                     <th style="width: 10%;">Nilai Butir</th>
                                     <th style="width: 10%;">IKM</th>
-                                    <th style="width: 17.5%;">Analisis Masalah dan Pemecahannya</th>
-                                    <th style="width: 17.5%;">Target Penyelesaian</th>
+                                    @if (!$isTemuan)
+                                        <th style="width: 17.5%;">Analisis Masalah dan Pemecahannya</th>
+                                        <th style="width: 17.5%;">Target Penyelesaian</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($surveiData as $index => $indicator)
-                                    <tr>
-                                        <td style="text-align: center;">{{ $index + 1 }}</td>
-                                        <td>{{ $indicator['name'] }}</td>
-                                        <td style="text-align: center;">{{ $indicator['nilai_butir'] }}</td>
-                                        <td style="text-align: center;">{{ number_format($indicator['ikm'], 2) }}%</td>
-                                        <td>
-                                            @if (isset($indicator['rencana_tindak_lanjut']))
-                                                {{ $indicator['rencana_tindak_lanjut'] }}
+                                @if ($isTemuan && isset($surveiData['survei']['aspek']) && is_array($surveiData['survei']['aspek']))
+                                    @foreach ($surveiData['survei']['aspek'] as $aspek)
+                                        <tr>
+                                            <td colspan="{{ $isTemuan ? 4 : 6 }}" class="category-header">{{ $aspek['name'] }}</td>
+                                        </tr>
+                                        @php
+                                            $rows = collect($aspek['indicator'] ?? [])->map(function ($ind) use ($tabelById) {
+                                                return $tabelById->get($ind['id']);
+                                            })->filter(function ($row) {
+                                                return is_array($row);
+                                            })->values()->all();
+                                            $summary = $surveiData['detail_rekapitulasi_aspek'][$aspek['id']] ?? null;
+                                        @endphp
+                                        @foreach ($rows as $i => $indicator)
+                                            <tr>
+                                                <td style="text-align: center;">{{ $i + 1 }}</td>
+                                                <td>{{ $indicator['name'] }}</td>
+                                                <td style="text-align: center;">{{ $indicator['nilai_butir'] }}</td>
+                                                <td style="text-align: center;">{{ number_format($indicator['ikm'], 2) }}%</td>
+                                            </tr>
+                                        @endforeach
+                                        <tr>
+                                            <td colspan="{{ $isTemuan ? 4 : 6 }}" class="category-average">
+                                                @if ($summary)
+                                                    Rekap Aspek — Nilai Butir: <span style="font-weight: bold;">{{ $summary['nilai_butir'] ?? '-' }}</span>,
+                                                    IKM: <span style="font-weight: bold;">{{ number_format(floatval($summary['ikm'] ?? 0), 2) }}%</span>,
+                                                    Mutu Layanan: <span style="font-weight: bold;">{{ $summary['mutu_layanan'] ?? '-' }}</span>,
+                                                    Kinerja Unit: <span style="font-weight: bold;">{{ $summary['kinerja_unit'] ?? '-' }}</span>,
+                                                    Predikat Kepuasan: <span style="font-weight: bold;">{{ $summary['predikat_kepuasan'] ?? '-' }}</span>
+                                                @else
+                                                    Rekap Aspek tidak tersedia.
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    @foreach ($surveiData['tabel'] as $index => $indicator)
+                                        <tr>
+                                            <td style="text-align: center;">{{ $index + 1 }}</td>
+                                            <td>{{ $indicator['name'] }}</td>
+                                            <td style="text-align: center;">{{ $indicator['nilai_butir'] }}</td>
+                                            <td style="text-align: center;">{{ number_format($indicator['ikm'], 2) }}%</td>
+                                            @if (!$isTemuan)
+                                                <td>
+                                                    @if (isset($indicator['rencana_tindak_lanjut']))
+                                                        {{ $indicator['rencana_tindak_lanjut'] }}
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if (isset($indicator['target_penyelesaian']))
+                                                        {{ $indicator['target_penyelesaian'] }}
+                                                    @endif
+                                                </td>
                                             @endif
-                                        </td>
-                                        <td>
-                                            @if (isset($indicator['target_penyelesaian']))
-                                                {{ $indicator['target_penyelesaian'] }}
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                        </tr>
+                                    @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -477,16 +541,39 @@
 
 
 
-    @if ($lampiran->count() > 0)
+    @php
+        $imageLampiran = $lampiran->filter(function ($l) {
+            return in_array(strtolower($l->file_type), ['png', 'jpg', 'jpeg']);
+        });
+    @endphp
+    @if ($imageLampiran->count() > 0)
         <div class="page-break"></div>
         <div class="attachment-section">
             <div class="section-title">Lampiran Gambar</div>
 
             <div class="image-gallery">
-                @foreach ($lampiran as $image)
+                @foreach ($imageLampiran as $image)
                     <div class="image-item">
                         <div class="image-container">
-                            <img src="{{ public_path('storage/' . $image->file_path) }}" alt="{{ $image->judul }}">
+                            @php
+                                $absPath = storage_path('app/public/' . $image->file_path);
+                                $mime = strtolower(pathinfo($absPath, PATHINFO_EXTENSION));
+                                if (in_array($mime, ['jpg', 'jpeg'])) {
+                                    $mime = 'jpeg';
+                                }
+                                $dataUri = null;
+                                if (is_readable($absPath)) {
+                                    $data = @file_get_contents($absPath);
+                                    if ($data !== false) {
+                                        $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
+                                    }
+                                }
+                            @endphp
+                            @if ($dataUri)
+                                <img src="{{ $dataUri }}" alt="{{ $image->judul }}">
+                            @else
+                                <div style="text-align:center;color:#a00;font-size:10pt;">Gambar tidak dapat dimuat.</div>
+                            @endif
                             <div class="image-caption">
                                 {{ $image->judul }} ({{ $image->file_name }})
                             </div>

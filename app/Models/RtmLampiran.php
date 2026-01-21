@@ -14,6 +14,7 @@ class RtmLampiran extends Model
     protected $fillable = [
         'rtm_id',
         'fakultas_id',
+        'prodi_id',
         'judul',
         'file_path',
         'file_name',
@@ -35,5 +36,13 @@ class RtmLampiran extends Model
     public function fakultas()
     {
         return $this->belongsTo(Fakultas::class, 'fakultas_id');
+    }
+
+    /**
+     * Get the prodi that owns the lampiran if applicable
+     */
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'prodi_id');
     }
 } 

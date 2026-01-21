@@ -95,7 +95,9 @@ class MasterProdi extends Component
 
         try {
             DB::beginTransaction();
-            Prodi::create([
+
+            
+            $newProdi = Prodi::create([
                 'name' => $this->prodi['nama'],
                 'code' => $this->prodi['kode'],
                 'fakultas_id' => $this->prodi['fakultas_id'],
@@ -106,18 +108,20 @@ class MasterProdi extends Component
 
             DB::commit();
 
+            $this->reset('prodi');
+            $this->dataProdi = Prodi::all();
+
             session()->flash('toastMessage', 'Data berhasil ditambahkan');
             session()->flash('toastType', 'success');
 
         } catch (\Exception $e) {
             DB::rollBack();
-
+            Log::error('Error adding prodi: ' . $e->getMessage());
             session()->flash('toastMessage', 'Terjadi kesalahan: ' . $e->getMessage());
             session()->flash('toastType', 'error');
         }
-       
 
-        return redirect()->to('master_prodi');
+        return redirect()->route('dashboard.master.prodi.index');
     }
     
     public function deleteProdi($id)    
@@ -128,16 +132,19 @@ class MasterProdi extends Component
             Prodi::findOrFail($id)->delete();
 
             DB::commit();
-
+            
+            $this->dataProdi = Prodi::all();
+            
             session()->flash('toastMessage', 'Data berhasil dihapus');
             session()->flash('toastType', 'success');
             
         } catch (\Exception $e) {
             DB::rollBack();
-
+            Log::error('Error deleting prodi: ' . $e->getMessage());
             session()->flash('toastMessage', 'Terjadi kesalahan: ' . $e->getMessage());
             session()->flash('toastType', 'error');
         }
-        return redirect()->to('master_prodi');
+        
+        return redirect()->route('dashboard.master.prodi.index');
     }
 }

@@ -29,6 +29,7 @@ class RtmRencanaTindakLanjut extends Model
         'akreditasi_id',
         'rtm_id',
         'fakultas_id',
+        'prodi_id',
     ];
 
     /**
@@ -45,5 +46,13 @@ class RtmRencanaTindakLanjut extends Model
     public function fakultas()
     {
         return $this->belongsTo(Fakultas::class, 'fakultas_id');
+    }
+
+    /**
+     * Get the prodi that owns this rencana tindak lanjut (if applicable).
+     */
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'prodi_id');
     }
 } 

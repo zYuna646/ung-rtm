@@ -16,7 +16,7 @@ class Fakultas extends Model
         'akreditasi',
     ];
 
-    public function prodi()
+    public function prodis()
     {
         return $this->hasMany(Prodi::class);
     }

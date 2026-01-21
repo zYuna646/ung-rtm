@@ -176,12 +176,24 @@
     </section>
     @push('scripts')
     <script>
-        $(document).ready(function() {
-        // Inisialisasi DataTables
-        var table = $('#myTable').DataTable();
-    });
-    </script>
-    <script>
+        let dataTable;
+        
+        document.addEventListener('livewire:initialized', () => {
+            // Initialize DataTable
+            dataTable = $('#myTable').DataTable();
+            
+            // Listen for refreshDatatable event
+            @this.on('refreshDatatable', () => {
+                dataTable.destroy();
+                dataTable = $('#myTable').DataTable();
+            });
+            
+            // Listen for closeModal event
+            @this.on('closeModal', () => {
+                Alpine.store('addModal', false);
+            });
+        });
+        
         function confirmDelete(id) {
             if(confirm(`Hapus User? ${id}`)) {
                 @this.call('deleteUser', id);

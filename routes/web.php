@@ -66,6 +66,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/edit/{id}', action: Edit::class)->name('edit');
                 Route::get('/view-ami/{rtm_id}/{anchor_id}', \App\Livewire\Admin\Master\Rtm\ViewAmi::class)->name('view-ami');
                 Route::get('/view-survei/{rtm_id}/{survei_id}', ViewSurvei::class)->name('view-survei');
+                // Temuan context routes
+                Route::get('/view-ami-temuan/{rtm_id}/{anchor_id}', \App\Livewire\Admin\Master\Rtm\ViewAmi::class)->name('view-ami-temuan');
+                Route::get('/view-survei-temuan/{rtm_id}/{survei_id}', ViewSurvei::class)->name('view-survei-temuan');
                 // Route::get('/download', action: Edit::class)->name('download');
             });
 

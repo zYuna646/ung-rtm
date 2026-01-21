@@ -12,6 +12,7 @@ class RtmReport extends Model
     protected $fillable = [
         'rtm_id',
         'fakultas_id',
+        'prodi_id',
         'mengetahui1_nama',
         'mengetahui1_jabatan',
         'mengetahui1_nip',

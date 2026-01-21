@@ -15,11 +15,15 @@ class RTM extends Model
         'tahun',
         'ami_anchor',
         'survei_anchor',
+        // 'akreditas_anchor',
+        // 'is_temuan',
     ];
 
     protected $casts = [
         'ami_anchor' => 'array',
         'survei_anchor' => 'array',
+        'akreditas_anchor' => 'array',
+        'is_temuan' => 'boolean',
     ];
     
     /**

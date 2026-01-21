@@ -81,7 +81,7 @@
             </div>
         </div>
 
-        @if ($user->role->name == 'Universitas')
+        @if ($user->role->name == 'Universitas' || $user->role->name == 'Fakultas')
         <!-- Filter Card -->
         <div class="bg-white p-6 rounded-xl shadow-lg mb-10 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br from-white to-indigo-50 border border-indigo-50">
             <div class="flex items-center mb-5">
@@ -92,6 +92,7 @@
             </div>
 
             <div class="flex flex-col md:flex-row md:items-end gap-6">
+                @if ($user->role->name == 'Universitas')
                 <div class="flex-grow">
                     <label for="fakultas" class="text-base font-medium text-gray-700 mb-2.5 block">Fakultas:</label>
                     <div class="relative">
@@ -101,6 +102,28 @@
                             <option value="">Semua Fakultas</option>
                             @foreach ($fakultas as $f)
                                 <option value="{{ $f->id }}">{{ $f->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                            @if($isLoading)
+                                <i class="fas fa-spinner animate-spin text-gray-500"></i>
+                            @else
+                                <i class="fas fa-chevron-down text-gray-500"></i>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <div class="flex-grow">
+                    <label for="prodi" class="text-base font-medium text-gray-700 mb-2.5 block">Program Studi:</label>
+                    <div class="relative">
+                        <select id="prodi" wire:model.live="selectedProdi"
+                            class="w-full p-3.5 text-base border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 hover:bg-white shadow-md"
+                            {{ $isLoading || empty($prodis) ? 'disabled' : '' }}>
+                            <option value="">Semua Program Studi</option>
+                            @foreach ($prodis as $p)
+                                <option value="{{ $p->id }}">{{ $p->name }}</option>
                             @endforeach
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
@@ -137,7 +160,19 @@
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-gray-800 mb-1">Data Audit Mutu Internal</h2>
-                            <p class="text-base text-gray-700">{{ $selectedFakultas ? App\Models\Fakultas::find($selectedFakultas)->name : 'Semua Fakultas' }}</p>
+                            <p class="text-base text-gray-700">
+                                @if($user->role->name == 'Prodi')
+                                    {{ $user->prodi->name }}
+                                @else
+                                    @if($selectedProdi)
+                                        {{ App\Models\Prodi::find($selectedProdi)->name }}
+                                    @elseif($selectedFakultas)
+                                        {{ App\Models\Fakultas::find($selectedFakultas)->name }}
+                                    @else
+                                        Semua Fakultas
+                                    @endif
+                                @endif
+                            </p>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
@@ -203,8 +238,12 @@
                                             <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700 border">Sesuai</th>
                                             <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700 border">Tidak Sesuai</th>
                                             <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700 border">Capaian Kinerja</th>
+                                            @unless($isTemuan)
                                             <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700 border">Analisis Masalah dan Pemecahannya</th>
+                                            @endunless
+                                            @unless($isTemuan)
                                             <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700 border">Target Penyelesaian</th>
+                                            @endunless
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -244,6 +283,7 @@
                                                         {{ $indicator['score'] }}%
                                                     </span>
                                                 </td>
+                                                @unless($isTemuan)
                                                 <td class="px-6 py-4 text-base text-gray-600 border-r">
                                                     @if(isset($rencanaForms[$indicator['id']]) && !empty($rencanaForms[$indicator['id']]['rencana_tindak_lanjut']))
                                                         <div class="flex justify-between items-center gap-2">
@@ -269,6 +309,8 @@
                                                         </button>
                                                     @endif
                                                 </td>
+                                                @endunless
+                                                @unless($isTemuan)
                                                 <td class="px-6 py-4 text-base text-gray-600">
                                                     @if(isset($rencanaForms[$indicator['id']]) && !empty($rencanaForms[$indicator['id']]['target_penyelesaian']))
                                                         <div class="text-gray-800">{{ $rencanaForms[$indicator['id']]['target_penyelesaian'] }}</div>
@@ -276,6 +318,7 @@
                                                         <span class="text-gray-400">-</span>
                                                     @endif
                                                 </td>
+                                                @endunless
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -296,6 +339,7 @@
         </div>
         
         <!-- Rencana Tindak Lanjut Modal -->
+        @unless($isTemuan)
         <div x-show="$wire.formIsOpen" style="display: none" x-on:keydown.escape.window="$wire.closeRencanaForm()"
             class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full h-full bg-black/60 backdrop-blur-sm">
             <div class="relative p-4 w-full max-w-2xl max-h-full" @click.outside="$wire.closeRencanaForm()">
@@ -381,6 +425,7 @@
                 </div>
             </div>
         </div>
+        @endunless
         
         <!-- Program Modal -->
         <div x-show="$wire.programModalOpen" style="display: none" x-on:keydown.escape.window="$wire.closeProgramModal()"

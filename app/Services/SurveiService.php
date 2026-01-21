@@ -53,11 +53,15 @@ class SurveiService
             $response = Http::get($this->baseUrl . 'survey');
             return $response->json();
         } catch (\Throwable $th) {
-            return response()->json(['error' => 'Failed to fetch data', 'message' => $th->getMessage()], 500);
+            return [
+                'data' => [],
+                'error' => 'Failed to fetch data',
+                'message' => $th->getMessage(),
+            ];
         }
     }
 
-    public function getSurveyDetail($id, $fakultas, $prodi)
+    public function getSurveyDetail($id, $fakultas, $prodi, $total_item = 0)
     {
         try {
             $queryParams = [];
@@ -68,6 +72,9 @@ class SurveiService
             if ($fakultas) {
                 $queryParams['fakultas_id'] = $fakultas;
             }
+
+            $queryParams['total_item'] = $total_item;
+
             $response = Http::get($this->baseUrl . 'survey/'. $id.'/detail', $queryParams);
             return $response->json();
         } catch (\Throwable $th) {
@@ -95,9 +102,12 @@ class SurveiService
     //     return null;  
     // }
 
-    public function getSurvei($id, $fakultasId)
+    public function getSurvei($id, $fakultasId, $totalItem = 5)
     {
-        $response = Http::get($this->baseUrl . 'survei/' . $id . '/' . $fakultasId);
+        $response = Http::get(
+            $this->baseUrl . 'survei/' . $id . '/' . $fakultasId,
+            ['total_item' => $totalItem]
+        );
         if ($response->successful()) {
             return $response->json();
         }
@@ -105,4 +115,16 @@ class SurveiService
         return null;
     }
 
+    public function getSurveiProdi($id, $prodiId, $totalItem = 5)
+    {
+        $response = Http::get(
+            $this->baseUrl . 'survei/' . $id . '/prodi/' . $prodiId,
+            ['total_item' => $totalItem]
+        );
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        return null;
+    }
 }

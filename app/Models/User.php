@@ -22,12 +22,18 @@ class User extends Authenticatable
         'email',
         'password',
         'fakultas_id',
-        'role_id'
+        'role_id',
+        'prodi_id'
     ];
 
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class);
     }
 
     public function fakultas()

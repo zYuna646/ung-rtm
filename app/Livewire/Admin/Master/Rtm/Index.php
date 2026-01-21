@@ -26,12 +26,14 @@ class Index extends Component
         'ami_anchor' => [],
         'survei_anchor' => [],
         'akreditas_anchor' => [],
+        'is_temuan' => false,
     ];
 
     protected $listeners = ['deleteFakultas'];
 
     public function mount(AmiService $amiService, SurveiService $surveiService)
     {
+        // dd($amiService->getAnchor()['data']);
         $this->anchor_ami = $amiService->getAnchor()['data'];
         $this->anchor_survei = $surveiService->getAnchor()['data'];
         $this->refreshData();
@@ -56,6 +58,7 @@ class Index extends Component
             'rtm.tahun' => 'required|integer',
             'rtm.ami_anchor' => 'array',
             'rtm.survei_anchor' => 'array',
+            'rtm.is_temuan' => 'boolean',
         ]);
 
         // Create RTM record
@@ -64,6 +67,8 @@ class Index extends Component
             'tahun' => $this->rtm['tahun'],
             'ami_anchor' => $this->rtm['ami_anchor'],
             'survei_anchor' => $this->rtm['survei_anchor'],
+            // 'akreditas_anchor' => $this->rtm['akreditas_anchor'],
+            // 'is_temuan' => (bool) ($this->rtm['is_temuan'] ?? false),
         ]);
 
         session()->flash('toastMessage', 'RTM berhasil ditambahkan!');
@@ -83,6 +88,7 @@ class Index extends Component
             'ami_anchor' => [],
             'survei_anchor' => [],
             'akreditas_anchor' => [],
+            'is_temuan' => false,
         ];
     }
     

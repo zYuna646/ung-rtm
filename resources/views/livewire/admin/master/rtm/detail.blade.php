@@ -50,7 +50,7 @@
                     </button>
                 </div>
                 
-                @if ($user->role->name == 'Universitas')
+                @if ($user->role->name == 'Universitas' || $user->role->name == 'Fakultas')
                     <!-- Kartu Filter -->
                     <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
                         <div class="flex items-center border-b border-gray-200 pb-4 mb-4">
@@ -60,10 +60,10 @@
                             <h2 class="text-2xl font-bold text-gray-800">Filter Data</h2>
                         </div>
                         
+                        @if ($user->role->name == 'Universitas')
                         <div class="mb-6">
                             <label for="fakultas" class="block text-sm font-medium text-gray-700 mb-2">Fakultas</label>
                             <div class="relative">
-                            
                                 <select id="fakultas" name="fakultas" wire:model="selectedFakultas" wire:change="loadLampiran"
                                     class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
                                     <option value="">Semua Fakultas</option>
@@ -76,6 +76,42 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
+
+                        @if ($user->role->name == 'Universitas')
+                        <div class="col-span-12 mb-4">
+                            <label for="report_jenis" class="block text-sm font-medium text-gray-700 mb-1">Jenis Laporan:</label>
+                            <div class="relative">
+                                <select id="report_jenis" wire:model="isTemuanReport" 
+                                    class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
+                                    <option value="0">Normal</option>
+                                    <option value="1">Temuan</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-500"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Pilih "Temuan" untuk menyembunyikan kolom Analisis/Target dan set total item survei ke 0.</p>
+                        </div>
+                        @endif
+
+                        @if ($user->role->name == 'Universitas' || $user->role->name == 'Fakultas')
+                        <div class="mb-6">
+                            <label for="prodi" class="block text-sm font-medium text-gray-700 mb-2">Program Studi</label>
+                            <div class="relative">
+                                <select id="prodi" name="prodi" wire:model="selectedProdi" wire:change="loadLampiran"
+                                    class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
+                                    <option value="">Semua Program Studi</option>
+                                    @foreach ($prodis as $p)
+                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                         
                         <button wire:click="resetFilter" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
                             <i class="fas fa-redo-alt mr-2"></i> Reset Filter
@@ -208,10 +244,19 @@
                                         <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $matchedAnchor['code'] ?? '-' }}</td>
                                         <td class="px-6 py-4 text-sm text-gray-600">{{ $matchedAnchor['name'] ?? '-' }}</td>
                                         <td class="px-6 py-4 text-center">
-                                            <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
-                                                onclick="window.location.href='{{ route('dashboard.master.rtm.view-survei', ['rtm_id' => $rtm->id, 'survei_id' => $item]) }}'">
-                                                <i class="fas fa-eye mr-1"></i> Lihat Data
-                                            </x-button>
+                                            <div class="flex items-center justify-center gap-2">
+                                                <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
+                                                    onclick="window.location.href='{{ route('dashboard.master.rtm.view-survei', ['rtm_id' => $rtm->id, 'survei_id' => $item]) }}'">
+                                                    <i class="fas fa-eye mr-1"></i> Lihat Data
+                                                </x-button>
+                                                @php $roleSlug = Auth::user()->role->name ?? null; @endphp
+                                                {{-- @if(in_array($roleSlug, ['admin','universitas'])) --}}
+                                                <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
+                                                    onclick="window.location.href='{{ route('dashboard.master.rtm.view-survei-temuan', ['rtm_id' => $rtm->id, 'survei_id' => $item]) }}'">
+                                                    <i class="fas fa-exclamation-triangle mr-1"></i> Temuan
+                                                </x-button>
+                                                {{-- @endif --}}
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -258,10 +303,19 @@
                                         <td class="px-6 py-4 text-sm text-gray-600">
                                             {{ $matchedAnchor['periode_name'] ?? '-' }}</td>
                                         <td class="px-6 py-4 text-center">
-                                            <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
-                                                onclick="window.location.href='{{ route('dashboard.master.rtm.view-ami', ['rtm_id' => $rtm->id, 'anchor_id' => $item]) }}'">
-                                                <i class="fas fa-eye mr-1"></i> Lihat Data
-                                            </x-button>
+                                            <div class="flex items-center justify-center gap-2">
+                                                <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
+                                                    onclick="window.location.href='{{ route('dashboard.master.rtm.view-ami', ['rtm_id' => $rtm->id, 'anchor_id' => $item]) }}'">
+                                                    <i class="fas fa-eye mr-1"></i> Lihat Data
+                                                </x-button>
+                                                @php $roleSlug = Auth::user()->role->name ?? null; @endphp
+                                                {{-- @if(in_array($roleSlug, ['admin','universitas'])) --}}
+                                                <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
+                                                    onclick="window.location.href='{{ route('dashboard.master.rtm.view-ami-temuan', ['rtm_id' => $rtm->id, 'anchor_id' => $item]) }}'">
+                                                    <i class="fas fa-exclamation-triangle mr-1"></i> Temuan
+                                                </x-button>
+                                                {{-- @endif --}}
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -270,7 +324,7 @@
                     </div>
                 </div>
 
-                <div x-data="{ expanded: true }" class="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                <div x-data="{ expanded: true, akreditasiTemuan: false }" class="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
                     <div class="flex justify-between items-center mb-5">
                         <div class="flex items-center">
                             <div class="bg-purple-100 p-2 rounded-full mr-3">
@@ -278,15 +332,28 @@
                             </div>
                             <h2 class="text-2xl font-bold text-gray-800">Akreditasi</h2>
                         </div>
-                        <button type="button" @click="expanded = !expanded"
-                            class="bg-gray-100 hover:bg-gray-200 p-2 rounded-full focus:outline-none transition-colors duration-200">
-                            <template x-if="expanded">
-                                <i class="fas fa-chevron-up text-gray-600"></i>
-                            </template>
-                            <template x-if="!expanded">
-                                <i class="fas fa-chevron-down text-gray-600"></i>
-                            </template>
-                        </button>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 text-sm text-gray-700">
+                                <span class="font-medium">Mode:</span>
+                                <label class="inline-flex items-center gap-1">
+                                    <input type="radio" class="form-radio text-indigo-600" x-model="akreditasiTemuan" :value="false">
+                                    <span>Normal</span>
+                                </label>
+                                <label class="inline-flex items-center gap-1">
+                                    <input type="radio" class="form-radio text-indigo-600" x-model="akreditasiTemuan" :value="true">
+                                    <span>Temuan</span>
+                                </label>
+                            </div>
+                            <button type="button" @click="expanded = !expanded"
+                                class="bg-gray-100 hover:bg-gray-200 p-2 rounded-full focus:outline-none transition-colors duration-200">
+                                <template x-if="expanded">
+                                    <i class="fas fa-chevron-up text-gray-600"></i>
+                                </template>
+                                <template x-if="!expanded">
+                                    <i class="fas fa-chevron-down text-gray-600"></i>
+                                </template>
+                            </button>
+                        </div>
                     </div>
                     <div x-show="expanded" x-transition class="overflow-hidden rounded-xl border border-gray-200">
                         <div class="overflow-x-auto">
@@ -327,24 +394,26 @@
                                                 </span>
                                             </td>
                                             <td class="px-2 py-2 text-center">
-                                                @if(isset($akreditasiRencanaForms[$akreditasi['akre_id']]) && 
-                                                    (!empty($akreditasiRencanaForms[$akreditasi['akre_id']]['rencana_tindak_lanjut']) || 
-                                                     !empty($akreditasiRencanaForms[$akreditasi['akre_id']]['target_penyelesaian'])))
-                                                    <div class="flex justify-center space-x-1">
+                                                <div x-show="!akreditasiTemuan">
+                                                    @if(isset($akreditasiRencanaForms[$akreditasi['akre_id']]) && 
+                                                        (!empty($akreditasiRencanaForms[$akreditasi['akre_id']]['rencana_tindak_lanjut']) || 
+                                                         !empty($akreditasiRencanaForms[$akreditasi['akre_id']]['target_penyelesaian'])))
+                                                        <div class="flex justify-center space-x-1">
+                                                            <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, '{{ $akreditasi['prodi']['prodi_nama'] }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
+                                                                <i class="fas fa-edit mr-1"></i>
+                                                            </button>
+                                                            <button 
+                                                                onclick="if(confirm('Hapus rencana tindak lanjut ini?')) { @this.call('deleteAkreditasiRencanaTindakLanjut', {{ $akreditasi['akre_id'] }}); }"
+                                                                class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded">
+                                                                <i class="fas fa-trash mr-1"></i>
+                                                            </button>
+                                                        </div>
+                                                    @else
                                                         <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, '{{ $akreditasi['prodi']['prodi_nama'] }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
-                                                            <i class="fas fa-edit mr-1"></i>
+                                                            <i class="fas fa-clipboard-list mr-1"></i> Analisis Masalah dan Pemecahannya
                                                         </button>
-                                                        <button 
-                                                            onclick="if(confirm('Hapus rencana tindak lanjut ini?')) { @this.call('deleteAkreditasiRencanaTindakLanjut', {{ $akreditasi['akre_id'] }}); }"
-                                                            class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded">
-                                                            <i class="fas fa-trash mr-1"></i>
-                                                        </button>
-                                                    </div>
-                                                @else
-                                                    <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, '{{ $akreditasi['prodi']['prodi_nama'] }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
-                                                        <i class="fas fa-clipboard-list mr-1"></i> RTL
-                                                    </button>
-                                                @endif
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -456,6 +525,25 @@
                                 </div>
                             </div>
                             <p class="text-sm text-gray-500 mt-1">Pilih fakultas jika laporan ini spesifik untuk fakultas tertentu.</p>
+                        </div>
+                        @endif
+                        
+                        @if ($user->role->name == 'Universitas' || $user->role->name == 'Fakultas')
+                        <div class="col-span-12 mb-4">
+                            <label for="report_prodi" class="block text-sm font-medium text-gray-700 mb-1">Program Studi:</label>
+                            <div class="relative">
+                                <select id="report_prodi" wire:model="selectedProdi" 
+                                    class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
+                                    <option value="">Semua Program Studi</option>
+                                    @foreach($prodis as $p)
+                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-500"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Pilih program studi jika laporan ini spesifik untuk prodi tertentu.</p>
                         </div>
                         @endif
                         
@@ -772,8 +860,26 @@
                                         <i class="fas fa-chevron-down text-gray-500"></i>
                                     </div>
                                 </div>
+                            </div>
+                            @endif
+                            
+                            @if ($user->role->name == 'Universitas' || $user->role->name == 'Fakultas')
+                            <div class="flex flex-col">
+                                <label for="lampiran_prodi" class="text-sm font-medium text-gray-700 mb-1">Program Studi:</label>
+                                <div class="relative">
+                                    <select id="lampiran_prodi" wire:model="selectedProdi" wire:change="loadLampiran"
+                                        class="w-full p-3 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 hover:bg-white pl-4 pr-10">
+                                        <option value="">Semua Program Studi</option>
+                                        @foreach($prodis as $p)
+                                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                        <i class="fas fa-chevron-down text-gray-500"></i>
+                                    </div>
+                                </div>
                                 <div class="flex justify-between items-center mt-1">
-                                    <p class="text-sm text-gray-500">Pilih fakultas untuk filter lampiran atau buat lampiran khusus fakultas.</p>
+                                    <p class="text-sm text-gray-500">Pilih program studi untuk filter lampiran.</p>
                                     <button type="button" wire:click="resetFilter" class="text-xs text-blue-600 hover:text-blue-800">
                                         <i class="fas fa-times-circle mr-1"></i>Reset
                                     </button>
@@ -791,7 +897,7 @@
                                 @error('newLampiran.file')
                                     <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Format file: PDF, docx, xlsx, pptx (Maks: 10MB)</p>
+                                <p class="text-xs text-gray-500 mt-1">Format file: png, jpg, jpeg (Maks: 10MB)</p>
                             </div>
                             
                             <div class="flex justify-end">
@@ -808,14 +914,23 @@
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h4 class="text-lg font-medium text-gray-800">Daftar Lampiran</h4>
-                            @if($selectedFakultas)
-                                <div class="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full flex items-center">
-                                    <span>Filter: {{ collect($fakultas)->firstWhere('id', $selectedFakultas)->name }}</span>
-                                    <button wire:click="resetFilter" class="ml-1 text-blue-600 hover:text-blue-800">
+                            <div class="flex items-center space-x-2">
+                                @if($selectedFakultas)
+                                    <div class="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full flex items-center">
+                                        <span>Fakultas: {{ collect($fakultas)->firstWhere('id', $selectedFakultas)->name }}</span>
+                                    </div>
+                                @endif
+                                @if($selectedProdi)
+                                    <div class="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full flex items-center">
+                                        <span>Prodi: {{ collect($prodis)->firstWhere('id', $selectedProdi)->name }}</span>
+                                    </div>
+                                @endif
+                                @if($selectedFakultas || $selectedProdi)
+                                    <button wire:click="resetFilter" class="text-xs text-blue-600 hover:text-blue-800">
                                         <i class="fas fa-times-circle"></i>
                                     </button>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
                         
                         @if(count($lampiran) > 0)
@@ -839,7 +954,15 @@
                                             <div>
                                                 <h5 class="font-medium text-gray-800">{{ $item->judul }}</h5>
                                                 <p class="text-xs text-gray-500">{{ $item->file_name }} ({{ round($item->file_size / 1024) }} KB)</p>
-                                                <p class="text-xs text-gray-500">Fakultas: {{ $item->fakultas_id ? $item->fakultas->name : 'Universitas' }}</p>
+                                                <p class="text-xs text-gray-500">
+                                                    @if($item->prodi_id)
+                                                        Prodi: {{ $item->prodi->name }}
+                                                    @elseif($item->fakultas_id)
+                                                        Fakultas: {{ $item->fakultas->name }}
+                                                    @else
+                                                        Universitas
+                                                    @endif
+                                                </p>
                                             </div>
                                         </div>
                                         <div class="flex space-x-2">
