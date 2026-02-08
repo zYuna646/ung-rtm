@@ -957,6 +957,7 @@ class Detail extends Component
             session()->flash('toastMessage', 'Laporan RTM berhasil dibuat!');
             session()->flash('toastType', 'success');
 
+            // Build a user-friendly file name
             if ($data['fakultas'] != 'Universitas') {
                 if ($data['prodi'] != 'Prodi') {
                     $fileName = "Laporan RTM {$this->rtm->name} Tahun {$this->rtm->tahun} {$data['fakultas']} {$data['prodi']}.pdf";
@@ -967,12 +968,14 @@ class Detail extends Component
                 $fileName = "Laporan RTM {$this->rtm->name} Tahun {$this->rtm->tahun}.pdf";
             }
 
+            // Dispatch browser event so the frontend can trigger the download (works with Livewire)
+            $publicUrl = Storage::url(str_replace('public/', '', $finalFilePath));
+            $this->dispatchBrowserEvent('rtm-report-download', [
+                'url' => $publicUrl,
+                'filename' => $fileName,
+            ]);
 
-            // Return download response
-            return response()->download(
-                storage_path('app/' . $finalFilePath),
-                $fileName
-            )->deleteFileAfterSend(true);
+            return true;
         } catch (\Exception $e) {
             \Log::error('PDF generation error: ' . $e->getMessage());
             session()->flash('toastMessage', 'Gagal membuat PDF: ' . $e->getMessage());

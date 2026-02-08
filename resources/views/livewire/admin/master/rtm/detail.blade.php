@@ -249,13 +249,12 @@
                                                     onclick="window.location.href='{{ route('dashboard.master.rtm.view-survei', ['rtm_id' => $rtm->id, 'survei_id' => $item]) }}'">
                                                     <i class="fas fa-eye mr-1"></i> Lihat Data
                                                 </x-button>
-                                                @php $roleSlug = Auth::user()->role->name ?? null; @endphp
-                                                {{-- @if(in_array($roleSlug, ['admin','universitas'])) --}}
-                                                <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
-                                                    onclick="window.location.href='{{ route('dashboard.master.rtm.view-survei-temuan', ['rtm_id' => $rtm->id, 'survei_id' => $item]) }}'">
-                                                    <i class="fas fa-exclamation-triangle mr-1"></i> Temuan
-                                                </x-button>
-                                                {{-- @endif --}}
+                                                @if ($user->role->name == 'Universitas')
+                                                    <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
+                                                        onclick="window.location.href='{{ route('dashboard.master.rtm.view-survei-temuan', ['rtm_id' => $rtm->id, 'survei_id' => $item]) }}'">
+                                                        <i class="fas fa-exclamation-triangle mr-1"></i> Temuan
+                                                    </x-button>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -308,13 +307,12 @@
                                                     onclick="window.location.href='{{ route('dashboard.master.rtm.view-ami', ['rtm_id' => $rtm->id, 'anchor_id' => $item]) }}'">
                                                     <i class="fas fa-eye mr-1"></i> Lihat Data
                                                 </x-button>
-                                                @php $roleSlug = Auth::user()->role->name ?? null; @endphp
-                                                {{-- @if(in_array($roleSlug, ['admin','universitas'])) --}}
-                                                <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
-                                                    onclick="window.location.href='{{ route('dashboard.master.rtm.view-ami-temuan', ['rtm_id' => $rtm->id, 'anchor_id' => $item]) }}'">
-                                                    <i class="fas fa-exclamation-triangle mr-1"></i> Temuan
-                                                </x-button>
-                                                {{-- @endif --}}
+                                                @if ($user->role->name == 'Universitas')
+                                                    <x-button color="info" size="sm" class="hover:bg-indigo-600 transition-colors duration-200 shadow-sm"
+                                                        onclick="window.location.href='{{ route('dashboard.master.rtm.view-ami-temuan', ['rtm_id' => $rtm->id, 'anchor_id' => $item]) }}'">
+                                                        <i class="fas fa-exclamation-triangle mr-1"></i> Temuan
+                                                    </x-button>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -1137,6 +1135,21 @@
                             setTimeout(initRichTextEditor, 300);
                         }
                     });
+                });
+                window.addEventListener('rtm-report-download', function (e) {
+                    var detail = e.detail || {};
+                    var url = detail.url;
+                    var filename = detail.filename || '';
+                    if (url) {
+                        var link = document.createElement('a');
+                        link.href = url;
+                        if (filename) {
+                            link.setAttribute('download', filename);
+                        }
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
                 });
             });
         </script>
