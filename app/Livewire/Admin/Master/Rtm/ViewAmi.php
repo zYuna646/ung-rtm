@@ -114,35 +114,25 @@ class ViewAmi extends Component
                 $prodiAmiId = Prodi::find($this->user->prodi_id)->ami;
                 $result = $amiService->getAmiProdi($this->anchorId, $prodiAmiId);
             } else {
-                // Get the AMI ID from the fakultas, if one is selected
+                // Universitas/Fakultas view: fetch by Prodi if selected, else by Fakultas, else fetch all
                 $fakultasAmiId = 'null';
-                if ($this->selectedFakultas) {
-                    $fakultas = Fakultas::find($this->selectedFakultas);
-                    if ($fakultas) {
-                        $fakultasAmiId = $fakultas->ami;
-                        
-                        // If prodi is selected, get prodi-specific data
-                        if ($this->selectedProdi) {
-                            $prodiAmiId = Prodi::find($this->selectedProdi)->ami;
-                            $result = $amiService->getAmiProdi($this->anchorId, $prodiAmiId);
-                        } else {
-                            $result = $amiService->getAmi($this->anchorId, $fakultasAmiId);
-                        }
-                    } else {
-                        $fakultasAmiId = "null";
-                        $result = $amiService->getAmi($this->anchorId, $fakultasAmiId);
-                    }
+                if ($this->selectedProdi) {
+                    $prodiAmiId = Prodi::find($this->selectedProdi)->ami;
+                    $result = $amiService->getAmiProdi($this->anchorId, $prodiAmiId);
                 } else {
-                    $result = $amiService->getAmi($this->anchorId, $fakultasAmiId);
-                }
+                    if ($this->selectedFakultas) {
+                        $fakultas = Fakultas::find($this->selectedFakultas);
+                        $fakultasAmiId = $fakultas ? $fakultas->ami : 'null';
+                    }
+                    $result = $amiService->getAmi($this->anchorId, $fakultasAmiId);                }
             }
             
-            if (isset($result['data']) && !empty($result['data'])) {
-                if ($this->user->role->name == 'Prodi' || $this->selectedProdi) {
-                    $this->amiData = $result['data']['rtm'];
-                } else {
-                    $this->amiData = $result['data'];
+            $data = $result['data'] ?? [];
+            if (!empty($data)) {
+                if (isset($data['rtm']) && is_array($data['rtm'])) {
+                    $data = $data['rtm'];
                 }
+                $this->amiData = $data;
                 $this->calculateAverages();
             } else {
                 $this->amiData = [];
