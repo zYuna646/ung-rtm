@@ -216,11 +216,20 @@ class Detail extends Component
 
     protected function loadAkreditasiRencanaTindakLanjut($akreditasiId)
     {
-        // Find existing rencana tindak lanjut for this akreditasi
-        $rencana = RtmRencanaTindakLanjut::where('akreditasi_id', $akreditasiId)
-            ->where('rtm_id', $this->rtm->id)
-            ->where('fakultas_id', $this->selectedFakultas)
-            ->first();
+        $query = RtmRencanaTindakLanjut::where('akreditasi_id', $akreditasiId)
+            ->where('rtm_id', $this->rtm->id);
+        if ($this->user->role->name == 'Prodi') {
+            $query->where('prodi_id', $this->user->prodi_id);
+        } else {
+            if ($this->selectedProdi) {
+                $query->where('prodi_id', $this->selectedProdi);
+            } elseif ($this->selectedFakultas) {
+                $query->where('fakultas_id', $this->selectedFakultas)->where('prodi_id', null);
+            } else {
+                $query->whereNull('fakultas_id');
+            }
+        }
+        $rencana = $query->first();
 
         // Initialize the form data
         $this->akreditasiRencanaForms[$akreditasiId] = [
@@ -253,13 +262,13 @@ class Detail extends Component
             'akreditasiRencanaForms.' . $this->currentAkreditasiId . '.target_penyelesaian.required' => 'Target penyelesaian tidak boleh kosong',
         ]);
 
-        // Check if we already have a record
+        $isProdiSpecific = $this->user->role->name == 'Prodi' || !empty($this->selectedProdi);
         $rencana = RtmRencanaTindakLanjut::updateOrCreate(
             [
                 'akreditasi_id' => $this->currentAkreditasiId,
                 'rtm_id' => $this->rtm->id,
-                'fakultas_id' => $this->selectedFakultas,
-                'prodi_id' => $this->selectedProdi,
+                'fakultas_id' => $isProdiSpecific ? null : ($this->selectedFakultas ?: null),
+                'prodi_id' => $this->user->role->name == 'Prodi' ? $this->user->prodi_id : ($this->selectedProdi ?: null),
             ],
             [
                 'rencana_tindak_lanjut' => $this->akreditasiRencanaForms[$this->currentAkreditasiId]['rencana_tindak_lanjut'],
@@ -277,10 +286,16 @@ class Detail extends Component
     {
         $query = RtmRencanaTindakLanjut::where('akreditasi_id', $akreditasiId)
             ->where('rtm_id', $this->rtm->id);
-        if ($this->selectedFakultas) {
-            $query->where('fakultas_id', $this->selectedFakultas);
+        if ($this->user->role->name == 'Prodi') {
+            $query->where('prodi_id', $this->user->prodi_id);
         } else {
-            $query->whereNull('fakultas_id');
+            if ($this->selectedProdi) {
+                $query->where('prodi_id', $this->selectedProdi);
+            } elseif ($this->selectedFakultas) {
+                $query->where('fakultas_id', $this->selectedFakultas)->where('prodi_id', null);
+            } else {
+                $query->whereNull('fakultas_id');
+            }
         }
         $query->delete();
 

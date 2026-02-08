@@ -199,20 +199,15 @@ class ViewSurvei extends Component
             ]);
         }
 
+        $isProdiSpecific = $this->user->role->name == 'Prodi' || !empty($this->selectedProdi);
         $data = [
             'survei_id' => $this->currentIndicatorId,
             'rtm_id' => $this->rtm->id,
             'rencana_tindak_lanjut' => $this->rencanaForms[$this->currentIndicatorId]['rencana_tindak_lanjut'] ?? '',
             'target_penyelesaian' => $this->rencanaForms[$this->currentIndicatorId]['target_penyelesaian'],
+            'fakultas_id' => $isProdiSpecific ? null : ($this->user->role->name == 'Prodi' ? null : $this->selectedFakultas),
+            'prodi_id' => $this->user->role->name == 'Prodi' ? $this->user->prodi_id : ($this->selectedProdi ?: null),
         ];
-
-        if ($this->user->role->name == 'Prodi') {
-            $data['fakultas_id'] = $this->user->fakultas_id;
-            $data['prodi_id'] = $this->user->prodi_id;
-        } else {
-            $data['fakultas_id'] = $this->selectedFakultas;
-            $data['prodi_id'] = $this->selectedProdi;
-        }
 
         // Check if we already have a record
         RtmRencanaTindakLanjut::updateOrCreate(
