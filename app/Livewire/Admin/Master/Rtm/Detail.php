@@ -651,6 +651,8 @@ class Detail extends Component
                         $category_scores = [];
 
                         foreach ($items as $key => $indicator) {
+                            $indicator['sesuai_count'] = $indicator['sesuai_count'] ?? ($indicator['sesuai'] ?? 0);
+                            $indicator['tidak_sesuai_count'] = $indicator['tidak_sesuai_count'] ?? ($indicator['tidak_sesuai'] ?? 0);
                             // Attach RTL if exists, but do not require it in Temuan mode
                             if (isset($amiRtlData[$indicator['id']])) {
                                 $indicator['rencana_tindak_lanjut'] = $amiRtlData[$indicator['id']]->rencana_tindak_lanjut;
@@ -820,6 +822,20 @@ class Detail extends Component
                     if (isset($akreditasiRtlData[$akreditasi['akre_id']])) {
                         $akreditasi_data[$key]['rencana_tindak_lanjut'] = $akreditasiRtlData[$akreditasi['akre_id']]->rencana_tindak_lanjut;
                         $akreditasi_data[$key]['target_penyelesaian'] = $akreditasiRtlData[$akreditasi['akre_id']]->target_penyelesaian;
+                    }
+                    if (isset($akreditasi_data[$key]['peringatan']) && is_array($akreditasi_data[$key]['peringatan'])) {
+                        $warning = $akreditasi_data[$key]['peringatan'];
+                        if (isset($warning['text']) && is_string($warning['text'])) {
+                            $akreditasi_data[$key]['peringatan'] = $warning['text'];
+                        } elseif (isset($warning['message']) && is_string($warning['message'])) {
+                            $akreditasi_data[$key]['peringatan'] = $warning['message'];
+                        } else {
+                            $akreditasi_data[$key]['peringatan'] = implode(', ', array_map(function ($v) {
+                                if (is_null($v)) return '';
+                                if (is_scalar($v)) return (string) $v;
+                                return json_encode($v);
+                            }, $warning));
+                        }
                     }
                 }
 

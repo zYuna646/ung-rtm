@@ -1,9 +1,9 @@
 <main class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen" x-data="{
-    showToast: {{ session()->has('toastMessage') ? 'true' : 'false' }},
-    toastMessage: '{{ session('toastMessage') }}',
-    toastType: '{{ session('toastType') }}',
-    rtmReport: false,
-    lampiranModal: false
+    showToast: @js(session()->has('toastMessage')),
+    toastMessage: @js(session('toastMessage')),
+    toastType: @js(session('toastType')),
+    rtmReportModal: false,
+    lampiranModalOpen: false
 }" x-init="if (showToast) { setTimeout(() => showToast = false, 5000); }">
 
     @push('styles')
@@ -41,11 +41,11 @@
                         <h2 class="text-2xl font-bold text-gray-800">Laporan RTM</h2>
                     </div>
                     
-                    <button @click="rtmReport = !rtmReport" class="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center border border-gray-300 shadow-md mb-3">
+                    <button @click="rtmReportModal = !rtmReportModal" class="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center border border-gray-300 shadow-md mb-3">
                         <i class="fas fa-file-download mr-2 text-red-600"></i> Buat Laporan RTM
                     </button>
                     
-                    <button @click="lampiranModal = !lampiranModal" class="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center border border-gray-300 shadow-md">
+                    <button @click="lampiranModalOpen = !lampiranModalOpen" class="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center border border-gray-300 shadow-md">
                         <i class="fas fa-paperclip mr-2 text-green-600"></i> Kelola Lampiran ({{ count($lampiran) }})
                     </button>
                 </div>
@@ -397,7 +397,7 @@
                                                         (!empty($akreditasiRencanaForms[$akreditasi['akre_id']]['rencana_tindak_lanjut']) || 
                                                          !empty($akreditasiRencanaForms[$akreditasi['akre_id']]['target_penyelesaian'])))
                                                         <div class="flex justify-center space-x-1">
-                                                            <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, '{{ $akreditasi['prodi']['prodi_nama'] }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
+                                                            <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, @js($akreditasi['prodi']['prodi_nama']))" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
                                                                 <i class="fas fa-edit mr-1"></i>
                                                             </button>
                                                             <button 
@@ -407,7 +407,7 @@
                                                             </button>
                                                         </div>
                                                     @else
-                                                        <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, '{{ $akreditasi['prodi']['prodi_nama'] }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
+                                                        <button wire:click="openAkreditasiRencanaForm({{ $akreditasi['akre_id'] }}, @js($akreditasi['prodi']['prodi_nama']))" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded">
                                                             <i class="fas fa-clipboard-list mr-1"></i> Analisis Masalah dan Pemecahannya
                                                         </button>
                                                     @endif
@@ -470,7 +470,7 @@
     </section>
 
     <!-- RTM Report Modal -->
-    <div x-show="rtmReport" style="display: none" x-on:keydown.escape.window="rtmReport = false"
+    <div x-show="rtmReportModal" style="display: none" x-on:keydown.escape.window="rtmReportModal = false"
         class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-start w-full h-full bg-black/20 p-4">
         <div class="relative w-full max-w-xl my-8">
             <!-- Modal content -->
@@ -485,7 +485,7 @@
                             Laporan {{ $master }}
                         </h3>
                     </div>
-                    <button type="button" @click="rtmReport = false"
+                    <button type="button" @click="rtmReportModal = false"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-2 inline-flex items-center"
                         data-modal-hide="default-modal">
                         <i class="fas fa-times text-lg"></i>
@@ -631,7 +631,7 @@
                                 <label class="text-sm font-medium text-gray-700">Lampiran:</label>
                                 <span class="text-xs text-gray-500">({{ count($lampiran) }} file)</span>
                             </div>
-                            <button type="button" @click="lampiranModal = true; rtmReport = false" 
+                            <button type="button" @click="lampiranModalOpen = true; rtmReportModal = false" 
                                 class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
                                 <i class="fas fa-paperclip mr-2 text-indigo-600"></i> Kelola File Lampiran
                             </button>
@@ -781,7 +781,7 @@
                             
                             <!-- Buttons -->
                             <div class="flex justify-end mt-3">
-                                <x-button class="bg-gray-200 hover:bg-gray-300 text-gray-700 mr-2" type="button" @click="rtmReport = false">
+                                <x-button class="bg-gray-200 hover:bg-gray-300 text-gray-700 mr-2" type="button" @click="rtmReportModal = false">
                                     Batal
                                 </x-button>
                                 <x-button class="bg-blue-600 hover:bg-blue-700 text-white shadow-md mr-2" type="button" wire:click="saveReport">
@@ -805,7 +805,7 @@
     </div>
 
     <!-- RTM Lampiran Modal -->
-    <div x-show="lampiranModal" style="display: none" x-on:keydown.escape.window="lampiranModal = false"
+    <div x-show="lampiranModalOpen" style="display: none" x-on:keydown.escape.window="lampiranModalOpen = false"
         class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-start w-full h-full bg-black/20 p-4">
         <div class="relative w-full max-w-xl my-8">
             <!-- Modal content -->
@@ -820,7 +820,7 @@
                             Kelola Lampiran RTM
                         </h3>
                     </div>
-                    <button type="button" @click="lampiranModal = false"
+                    <button type="button" @click="lampiranModalOpen = false"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-2 inline-flex items-center">
                         <i class="fas fa-times text-lg"></i>
                         <span class="sr-only">Close modal</span>
@@ -982,7 +982,7 @@
                     </div>
                     
                     <div class="mt-6 flex justify-end">
-                        <button type="button" @click="lampiranModal = false" 
+                        <button type="button" @click="lampiranModalOpen = false" 
                             class="bg-blue-600 hover:bg-blue-700 text-black font-medium py-2 px-6 rounded-lg transition-colors duration-200">
                             Selesai
                         </button>
