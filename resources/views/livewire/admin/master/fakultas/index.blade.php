@@ -84,7 +84,7 @@
                                     class="p-4 text-sm rounded-md bg-neutral-100 text-slate-600 border border-neutral-200">
                                     <option value="">Pilih ID AMI</option>
                                     @foreach ($ami_faculties as $faculty)
-                                        <option value="{{ $faculty['id'] }}">{{ $faculty['department_name'] ?? 'Fakultas ID: '.$faculty['id'] }}</option>
+                                        <option value="{{ $faculty['id'] }}">{{ $faculty['name'] ?? $faculty['department_name'] ?? $faculty['nama'] ?? $faculty['faculty_name'] ?? 'Fakultas ID: '.$faculty['id'] }}</option>
                                     @endforeach
                                 </select>
                                 @error('fakultas.ami')
@@ -164,7 +164,7 @@
                                         
                                         $amiFaculty = collect($ami_faculties)->firstWhere('id', $fakultas['ami']);
                                     @endphp
-                                    {{ $amiFaculty['name'] ?? $amiFaculty['department_name'] ?? 'N/A' }}
+                                    {{ $amiFaculty['name'] ?? $amiFaculty['department_name'] ?? $amiFaculty['nama'] ?? $amiFaculty['faculty_name'] ?? 'N/A' }}
                                 </td>
                                 <td>
                                     @php

@@ -38,7 +38,7 @@
                         class="p-4 text-sm rounded-md bg-neutral-50 text-slate-800 focus:outline-none focus:outline-color-info-500 border border-neutral-200">
                         <option value="">Pilih ID AMI</option>
                         @foreach ($ami_faculties as $faculty)
-                            <option value="{{ $faculty['id'] }}">{{ $faculty['department_name'] ?? $faculty['name'] ?? 'Fakultas ID: '.$faculty['id'] }}</option>
+                            <option value="{{ $faculty['id'] }}">{{ $faculty['name'] ?? $faculty['department_name'] ?? $faculty['nama'] ?? $faculty['faculty_name'] ?? 'Fakultas ID: '.$faculty['id'] }}</option>
                         @endforeach
                     </select>
                     @error('fakultas.ami') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
