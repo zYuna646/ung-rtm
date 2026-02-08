@@ -601,6 +601,9 @@ class Detail extends Component
                 else
                 {
                     $amiResult = $amiService->getAmi($anchorId, $this->selectedFakultas ? $fakultas->ami : 'null');
+                    if (isset($amiResult['data']) && isset($amiResult['data']['rtm'])) {
+                        $amiResult['data'] = $amiResult['data']['rtm'];
+                    }
                 }
                 if (isset($amiResult['data']) && !empty($amiResult['data'])) {
                     // Store the period name and data separately
@@ -968,14 +971,12 @@ class Detail extends Component
                 $fileName = "Laporan RTM {$this->rtm->name} Tahun {$this->rtm->tahun}.pdf";
             }
 
-            // Dispatch browser event so the frontend can trigger the download (works with Livewire)
-            $publicUrl = Storage::url(str_replace('public/', '', $finalFilePath));
-            $this->dispatchBrowserEvent('rtm-report-download', [
-                'url' => $publicUrl,
-                'filename' => $fileName,
-            ]);
 
-            return true;
+            // Return download response
+            return response()->download(
+                storage_path('app/' . $finalFilePath),
+                $fileName
+            )->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             \Log::error('PDF generation error: ' . $e->getMessage());
             session()->flash('toastMessage', 'Gagal membuat PDF: ' . $e->getMessage());
